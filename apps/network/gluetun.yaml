@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    profiles: ["vpn", "all"]
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - vpn
+      - traefik
+    environment:
+      VPN_SERVICE_PROVIDER: nordvpn
+      VPN_TYPE: openvpn
+      OPENVPN_USER: ${NORDVPN_USER}
+      OPENVPN_PASSWORD: ${NORDVPN_PASS}
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1  # Recomended if using ipv4 only
+    labels:
+      dockpeek.tags: network

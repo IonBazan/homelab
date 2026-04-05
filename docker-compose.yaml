@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+include:
+  # AI
+  - apps/ai/ollama.yaml
+  - apps/ai/open-webui.yaml
+  # Automation
+  - apps/automation/homeassistant.yaml
+  - apps/automation/homebridge.yaml
+  # Network
+  - apps/network/ddns-updater.yaml
+  - apps/network/pihole.yaml
+  - apps/network/gluetun.yaml
+  - apps/network/netalertx.yaml
+  - apps/network/tailscale.yaml
+  - apps/network/traefik.yaml
+  - apps/network/whoami.yaml
+  - apps/network/gangplank.yaml
+  # Media
+  - apps/media/plex.yaml
+  - apps/media/jellyfin.yaml
+  - apps/media/radarr.yaml
+  - apps/media/sonarr.yaml
+  - apps/media/prowlarr.yaml
+  - apps/media/qbittorrent.yaml
+  # Tools
+  - apps/tools/dockpeek.yaml
+  - apps/tools/portainer.yaml
+  - apps/tools/homepage.yaml
+
+networks:
+  traefik: ~
+  vpn: ~
+
+
+volumes:
+  myMedia:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${MEDIA_DIR}
+  myDlFolders:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DOWNLOADS_DIR}

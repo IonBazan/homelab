@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  pihole:
+    image: pihole/pihole
+    container_name: pihole
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 81:80/tcp
+    cap_add:
+      - NET_ADMIN
+      - SYS_TIME
+      - SYS_NICE
+    environment:
+      FTLCONF_misc_dnsmasq_lines: address=/${DOMAIN_NAME}/${PHYSICAL_SERVER_IP}
+      VIRTUAL_HOST: pihole.${DOMAIN_NAME}
+      FTLCONF_dns_listeningMode: 'all'
+    networks:
+      - traefik
+    volumes:
+      - pihole_data:/etc/pihole
+    labels:
+      traefik.enable: true
+      traefik.http.services.pihole.loadbalancer.server.port: 80
+      dockpeek.tags: network
+      dockpeek.ports: 81
+
+volumes:
+  pihole_data:

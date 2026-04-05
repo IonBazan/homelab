@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    container_name: qbittorrent
+    profiles: ["vpn", "all"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      WEBUI_PORT: 8080
+    volumes:
+      - qbittorrent_data:/config
+      - myDlFolders:/downloads
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    network_mode: service:gluetun
+    depends_on:
+      - gluetun
+    ports:
+      - ${QBITTORRENT_PORT:-8081}:8080/tcp
+    labels:
+      - "traefik.enable=true"
+      - "dockpeek.tags=media"
+      # adding a slash to the end
+#      - "traefik.http.middlewares.qb-redirect.redirectregex.regex=^(.*)/qbittorrent"
+#      - "traefik.http.middlewares.qb-redirect.redirectregex.replacement=$$1/qbittorrent/"
+#      - "traefik.http.middlewares.qb-strip.stripprefix.prefixes=/qbittorrent/"
+      # appropriate header changes
+      - "traefik.http.middlewares.qb-headers.headers.customrequestheaders.X-Frame-Options=SAMEORIGIN"
+      - "traefik.http.middlewares.qb-headers.headers.customrequestheaders.Referer="
+      - "traefik.http.middlewares.qb-headers.headers.customrequestheaders.Origin="
+      - "traefik.http.routers.qb.middlewares=qb-headers"
+      # loadbalancer to *not* pass the host header
+      - "traefik.http.services.qb.loadbalancer.server.port=8080"
+      - "traefik.http.services.qb.loadbalancer.passhostheader=false"
+      - "traefik.docker.network=traefik-qb-net"
+volumes:
+  qbittorrent_data:

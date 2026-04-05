@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  sonarr:
+    container_name: sonarr
+    image: linuxserver/sonarr
+    profiles: ["media", "arrs", "all"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - sonarr_data:/config
+      - myMedia:/mnt/media
+      - myDlFolders:/mnt/downloads
+    ports:
+      - ${SONARR_PORT:-8989}:8989/tcp
+    depends_on:
+      - prowlarr
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      - traefik
+    labels:
+      traefik.enable: true
+      traefik.http.services.sonarr.loadbalancer.server.port: 8989
+      dockpeek.tags: media
+#      traefik.http.routers.sonarr.entrypoints: websecure
+#      traefik.http.routers.sonarr.tls: true
+#      traefik.http.routers.sonarr.tls.certresolver: letsencrypt
+
+volumes:
+  sonarr_data:

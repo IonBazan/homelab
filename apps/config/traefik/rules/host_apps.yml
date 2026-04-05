@@ -1,0 +1,13 @@
+http:
+  routers:
+    homeassistant:
+      entryPoints: ["websecure"]
+      service: "homeassistant"
+  services:
+    homeassistant:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - port: 8123
+            url: http://192.168.18.102:8123
+#            host: host.docker.internal

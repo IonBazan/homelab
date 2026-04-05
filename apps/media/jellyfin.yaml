@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    profiles: ["media", "all"]
+    ports:
+      - 8096:8096/tcp
+      - 8920:8920/tcp
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}  
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - jellyfin_config:/config
+      - jellyfin_cache:/cache
+      - myMedia:/mnt/media
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: false
+      dockpeek.ports: 8096
+      dockpeek.tags: media
+
+volumes:
+  jellyfin_config:
+  jellyfin_cache:

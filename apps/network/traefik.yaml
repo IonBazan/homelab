@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:3
+    profiles: ["traefik"]
+    ports:
+      - published: 80
+        target: 80
+        protocol: tcp
+        mode: host
+      - published: 443
+        target: 443
+        protocol: tcp
+        mode: host
+      - 8080:8080
+    environment:
+      - CF_API_EMAIL
+      - CF_DNS_API_TOKEN
+      - DOMAIN_NAME
+      - TZ
+      - TRAEFIK_SUBDOMAIN=${TRAEFIK_SUBDOMAIN:-traefik}
+    volumes:
+      - ../config/traefik/rules:/etc/traefik/dynamic:ro
+      - ../config/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../../data/traefik/logs:/logs
+      - ../../data/traefik/traefik:/etc/traefik
+      - ../../data/traefik/certs:/certs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik
+    security_opt:
+      - no-new-privileges:true
+    restart: always
+    command:
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      - --entrypoints.websecure.http.tls.domains[0].main=${DOMAIN_NAME}
+      - --entrypoints.websecure.http.tls.domains[0].sans="*.${DOMAIN_NAME}"
+      - --entrypoints.websecure.http.tls.certresolver=letsencrypt
+    extra_hosts:
+      - host.docker.internal:172.17.0.1
+    labels:
+      traefik.enable: true
+      traefik.http.routers.traefik.service: api@internal
+      traefik.http.routers.traefik.entrypoints: websecure
+      dockpeek.tags: network
+#      traefik.http.routers.traefik-rtr.middlewares: chain-oauth-google@file

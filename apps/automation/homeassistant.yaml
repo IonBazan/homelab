@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - hass_data:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    profiles: ["automation", "all"]
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    privileged: true
+    network_mode: host
+    labels:
+      traefik.enable: "false"
+      dockpeek.ports: 8123
+      dockpeek.tags: automation
+
+volumes:
+  hass_data:

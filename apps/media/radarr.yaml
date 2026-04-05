@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  radarr:
+    container_name: radarr
+    image: linuxserver/radarr
+    profiles: ["media", "arrs", "all"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - radarr_data:/config
+      - myMedia:/mnt/media
+      - myDlFolders:/mnt/downloads
+    ports:
+      - ${RADARR_PORT:-7878}:7878/tcp
+    depends_on:
+      - prowlarr
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      - traefik
+    labels:
+      traefik.http.services.radarr.loadbalancer.server.port: 7878
+      homepage.group: Media
+      homepage.name: Radarr
+      homepage.icon: radarr.png
+      homepage.href: http://{{HOSTNAME}}:7878
+      homepage.widget.type: radarr
+      dockpeek.tags: media
+
+volumes:
+  radarr_data:

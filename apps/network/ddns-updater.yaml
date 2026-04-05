@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns
+    ports:
+      - ${DDNS_UPDATER_PORT:-8001}:8000/tcp
+    volumes:
+      - ../config/ddns-updater:/updater/data
+    profiles: ["all"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      LISTENING_ADDRESS: ':8000'
+      ROOT_URL: /
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: true
+      traefik.http.services.ddns-updater.loadbalancer.server.port: 8000
+      dockpeek.tags: network

@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  homebridge:
+    container_name: homebridge
+    image: homebridge/homebridge:latest
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    network_mode: host
+    profiles: ["automation", "all"]
+    volumes:
+      - homebridge_data:/homebridge
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
+    environment:
+      TZ: ${TZ}
+    labels:
+      traefik.enable: "false"
+      dockpeek.ports: 8581
+      dockpeek.tags: automation
+
+volumes:
+  homebridge_data:

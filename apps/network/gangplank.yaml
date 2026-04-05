@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  gangplank:
+    image: ghcr.io/ionbazan/gangplank
+    container_name: gangplank
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    profiles: ["all"]
+    command: forward
+    environment:
+      TZ: ${TZ}
+    network_mode: host
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      dockpeek.tags: network

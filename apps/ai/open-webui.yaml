@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui
+    container_name: open-webui
+    ports:
+      - 3000:8080/tcp
+    volumes:
+      - open_webui_data:/app/backend/data
+    profiles: ["ai", "all"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: true
+      traefik.http.routers.open-webui.rule: "Host(`ai.${DOMAIN_NAME}`)"
+
+volumes:
+  open_webui_data:

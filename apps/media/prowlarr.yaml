@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  prowlarr:
+    image: linuxserver/prowlarr
+    container_name: prowlarr
+    profiles: ["media", "arrs", "all"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+    volumes:
+      - prowlarr_data:/config
+      - myMedia:/mnt/media
+      - myDlFolders:/mnt/downloads
+    ports:
+      - ${PROWLARR_PORT:-9696}:9696/tcp
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: true
+      traefik.http.services.prowlarr.loadbalancer.server.port: 9696
+      dockpeek.tags: media
+
+volumes:
+  prowlarr_data:

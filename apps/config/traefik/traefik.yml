@@ -1,0 +1,74 @@
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: "letsencrypt"
+    asDefault: true
+
+core:
+  defaultRuleSyntax: "v3"
+
+api:
+  dashboard: true
+  debug: true
+  insecure: true
+
+providers:
+  docker:
+    defaultRule: "Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `DOMAIN_NAME` }}`)"
+    exposedByDefault: false
+    network: "traefik"
+
+#    defaultEntrypoints: # Set the default entrypoint(s)
+#      - "websecure" # Only websecure here
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
+
+http:
+  middlewares:
+    strip-prefix:
+      stripPrefixRegex:
+        regex:
+          - "^/([^/]+)"
+
+  routers:
+    default-router:
+      rule: "Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `DOMAIN_NAME` }}`)"
+      certificateResolvers:
+        - "letsencrypt"
+      entryPoints:
+        - "websecure"
+      service: "{{ .Name }}"
+
+    catch-all:
+      rule: "PathPrefix(`/`)"
+      service: "dynamic@internal"
+      entrypoints:
+        - web
+        - websecure
+      middlewares: ["strip-prefix"]
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "ion.bazan@gmail.com"
+      storage: "/certs/acme.json"
+      dnsChallenge:
+        provider: "cloudflare"
+        delayBeforeCheck: 10
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"

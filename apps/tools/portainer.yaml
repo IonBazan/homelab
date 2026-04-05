@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce
+    profiles: ["utilities", "all"]
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8000:8000/tcp
+      - 9000:9000/tcp
+      - 9443:9443/tcp
+    environment:
+      TZ: ${TZ}
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      - traefik
+    labels:
+      traefik.http.services.portainer.loadbalancer.server.port: 9000
+      dockpeek.tags: tools
+
+volumes:
+  portainer_data:
