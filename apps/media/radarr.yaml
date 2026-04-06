@@ -10,8 +10,8 @@ services:
       TZ: ${TZ}
     volumes:
       - radarr_data:/config
-      - myMedia:/mnt/media
-      - myDlFolders:/mnt/downloads
+      - myMedia:/media
+      - myDlFolders:/downloads
     ports:
       - ${RADARR_PORT:-7878}:7878/tcp
     depends_on:

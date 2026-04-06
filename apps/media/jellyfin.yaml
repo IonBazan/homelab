@@ -15,7 +15,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - jellyfin_config:/config
       - jellyfin_cache:/cache
-      - myMedia:/mnt/media
+      - myMedia:/media
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     labels:
       traefik.enable: false

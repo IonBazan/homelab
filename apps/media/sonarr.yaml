@@ -10,8 +10,8 @@ services:
       TZ: ${TZ}
     volumes:
       - sonarr_data:/config
-      - myMedia:/mnt/media
-      - myDlFolders:/mnt/downloads
+      - myMedia:/media
+      - myDlFolders:/downloads
     ports:
       - ${SONARR_PORT:-8989}:8989/tcp
     depends_on:

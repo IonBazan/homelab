@@ -9,6 +9,8 @@ services:
     networks:
       - vpn
       - traefik
+    ports:
+      - ${QBITTORRENT_PORT:-8081}:${QBITTORRENT_PORT:-8081}/tcp
     environment:
       VPN_SERVICE_PROVIDER: nordvpn
       VPN_TYPE: openvpn

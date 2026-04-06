@@ -8,7 +8,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ}
-      WEBUI_PORT: 8080
+      WEBUI_PORT: ${QBITTORRENT_PORT:-8081}
     volumes:
       - qbittorrent_data:/config
       - myDlFolders:/downloads
@@ -16,8 +16,6 @@ services:
     network_mode: service:gluetun
     depends_on:
       - gluetun
-    ports:
-      - ${QBITTORRENT_PORT:-8081}:8080/tcp
     labels:
       - "traefik.enable=true"
       - "dockpeek.tags=media"
