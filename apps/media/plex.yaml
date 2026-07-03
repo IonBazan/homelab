@@ -19,7 +19,7 @@ services:
       TZ: ${TZ}
       VERSION: docker
       PLEX_CLAIM: ${PLEX_CLAIM}
-      ADVERTISE_IP: http://${PHYSICAL_SERVER_IP}:32400
+      ADVERTISE_IP: http://${PHYSICAL_SERVER_IP}:32400,http://${PUBLIC_DOMAIN}:${PLEX_PUBLIC_IP:-32400}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - plex_data:/config
