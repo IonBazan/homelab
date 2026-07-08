@@ -1,31 +1,27 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
-  radarr:
-    container_name: radarr
-    image: linuxserver/radarr
+  bazarr:
+    image: lscr.io/linuxserver/bazarr
+    container_name: bazarr
     profiles: ["media", "arrs", "all"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ}
     volumes:
-      - radarr_data:/config
+      - bazarr_data:/config
       - myMedia:/media
     ports:
-      - ${RADARR_PORT:-7878}:7878/tcp
+      - ${BAZARR_PORT:-6767}:6767/tcp
     depends_on:
-      - prowlarr
+      - radarr
+      - sonarr
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik
     labels:
-      traefik.http.services.radarr.loadbalancer.server.port: 7878
-      homepage.group: Media
-      homepage.name: Radarr
-      homepage.icon: radarr.png
-      homepage.href: http://{{HOSTNAME}}:7878
-      homepage.widget.type: radarr
+      traefik.http.services.bazarr.loadbalancer.server.port: 6767
       dockpeek.tags: media
 
 volumes:
-  radarr_data:
+  bazarr_data:

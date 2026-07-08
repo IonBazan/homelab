@@ -22,9 +22,10 @@ include:
   - apps/media/sonarr.yaml
   - apps/media/prowlarr.yaml
   - apps/media/qbittorrent.yaml
+  - apps/media/bazarr.yaml
   # Tools
   - apps/tools/dockpeek.yaml
-  - apps/tools/portainer.yaml
+  - apps/tools/openlist.yaml
   - apps/tools/homepage.yaml
 
 networks:
@@ -39,9 +40,3 @@ volumes:
       type: none
       o: bind
       device: ${MEDIA_DIR}
-  myDlFolders:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DOWNLOADS_DIR}

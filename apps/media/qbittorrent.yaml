@@ -11,11 +11,12 @@ services:
       WEBUI_PORT: ${QBITTORRENT_PORT:-8081}
     volumes:
       - qbittorrent_data:/config
-      - myDlFolders:/downloads
+      - myMedia:/media
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     network_mode: service:gluetun
     depends_on:
-      - gluetun
+      gluetun:
+        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "dockpeek.tags=media"

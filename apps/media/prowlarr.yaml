@@ -10,8 +10,6 @@ services:
       TZ: ${TZ}
     volumes:
       - prowlarr_data:/config
-      - myMedia:/media
-      - myDlFolders:/downloads
     ports:
       - ${PROWLARR_PORT:-9696}:9696/tcp
     networks:

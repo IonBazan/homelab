@@ -23,7 +23,7 @@ You can choose the services to deploy in your setup using different [Docker Comp
 - `media` - Media tools - all the *arrs, Jellyfin
 - `automation` - Home automation tools
 - `vpn` - Gluetun and qBittorrent
-- `utilities` - additional tools like Portainer
+- `tools` - additional tools like Portainer
 - `all` - All above
 
 Additionally, following are not included in `all` as they are quite optional:
@@ -94,6 +94,11 @@ A movie collection manager for Usenet and BitTorrent users, automating downloads
 - **Ports:** 7878:7878/tcp (configurable via RADARR_PORT)
 - **Profiles:** `media`, `arrs`, `all`
 
+#### [Bazarr](apps/media/bazarr.yaml)
+A companion app for Radarr and Sonarr that manages and downloads subtitles for movies and TV series.
+- **Ports:** 6767:6767/tcp (configurable via BAZARR_PORT)
+- **Profiles:** `media`, `arrs`, `all`
+
 #### [Sonarr](apps/media/sonarr.yaml)
 A TV series collection manager for Usenet and BitTorrent users, automating downloads and organization.
 - **Ports:** 8989:8989/tcp (configurable via SONARR_PORT)
@@ -151,12 +156,17 @@ A web UI for monitoring and managing Docker containers.
 #### [Portainer](apps/tools/portainer.yaml)
 A lightweight management UI for Docker, Docker Swarm, and Kubernetes.
 - **Ports:** 8000:8000/tcp, 9000:9000/tcp, 9443:9443/tcp
-- **Profiles:** `utilities`, `all`
+- **Profiles:** `tools`, `all`
 
 #### [Homepage](apps/tools/homepage.yaml)
 A modern, customizable dashboard for your self-hosted services.
 - **Ports:** 3000:3000/tcp (configurable via HOMEPAGE_PORT)
 - **Profiles:** (not specified)
+
+#### [OpenList](apps/tools/openlist.yaml)
+A file listing and sharing service for local and remote storage providers, with the shared media volume mounted at `/media`.
+- **Ports:** 5244:5244/tcp (configurable via OPENLIST_PORT), 5245:5245/tcp (configurable via OPENLIST_S3_PORT)
+- **Profiles:** `tools`, `all`
 
 ## Contributing
 
