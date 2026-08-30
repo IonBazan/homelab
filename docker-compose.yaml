@@ -23,10 +23,12 @@ include:
   - apps/media/prowlarr.yaml
   - apps/media/qbittorrent.yaml
   - apps/media/bazarr.yaml
+  - apps/media/tracearr.yaml
   # Tools
   - apps/tools/dockpeek.yaml
   - apps/tools/openlist.yaml
   - apps/tools/homepage.yaml
+  - apps/tools/homarr.yaml
 
 networks:
   traefik: ~

@@ -28,6 +28,7 @@ You can choose the services to deploy in your setup using different [Docker Comp
 
 Additionally, following are not included in `all` as they are quite optional:
 - `traefik` - Traefik
+- `pihole` - PiHole
 - `ai` - AI tools like Ollama and Open-WebUI
 
 #### Environment variables
@@ -99,6 +100,13 @@ A companion app for Radarr and Sonarr that manages and downloads subtitles for m
 - **Ports:** 6767:6767/tcp (configurable via BAZARR_PORT)
 - **Profiles:** `media`, `arrs`, `all`
 
+#### [Tracearr](apps/media/tracearr.yaml)
+A self-hosted playback tracker and analytics dashboard for Plex, Jellyfin and Emby. Ships with its own TimescaleDB and Redis containers on a private `tracearr` network.
+- **Ports:** 3001:3000/tcp (configurable via TRACEARR_PORT)
+- **Profiles:** `media`, `all`
+
+Requires `TRACEARR_JWT_SECRET` and `TRACEARR_COOKIE_SECRET` in `.env` (`openssl rand -hex 32` each).
+
 #### [Sonarr](apps/media/sonarr.yaml)
 A TV series collection manager for Usenet and BitTorrent users, automating downloads and organization.
 - **Ports:** 8989:8989/tcp (configurable via SONARR_PORT)
@@ -117,9 +125,26 @@ A simple Docker port forwarder and helper for exposing services.
 - **Profiles:** `all`
 
 #### [Gluetun](apps/network/gluetun.yaml)
-VPN client container to route traffic of other containers through a secure VPN tunnel.
-- **Ports:** (none by default)
+VPN client container to route traffic of other containers (qBittorrent) through a secure VPN tunnel.
+- **Ports:** 8081/tcp (qBittorrent WebUI, configurable via `QBITTORRENT_PORT`), 6881/tcp+udp (torrents, configurable via `TORRENT_PORT`)
 - **Profiles:** `vpn`, `all`
+
+VPN provider config is kept separate from the main `.env` so credentials are never in the compose files.
+Copy `.env.gluetun.example` to create a provider-specific file, fill in your credentials, then symlink it as the active config:
+
+```bash
+cp .env.gluetun.example .env.gluetun.nordvpn    # or .env.gluetun.wireguard
+# edit the file and fill in credentials
+ln -sf .env.gluetun.nordvpn .env.gluetun         # make it active
+docker compose up -d --force-recreate gluetun qbittorrent
+```
+
+To switch providers, point the symlink at a different file and recreate the containers:
+
+```bash
+ln -sf .env.gluetun.wireguard .env.gluetun
+docker compose up -d --force-recreate gluetun qbittorrent
+```
 
 #### [NetAlertX](apps/network/netalertx.yaml)
 Network device monitoring and alerting tool for your home network.
@@ -153,10 +178,10 @@ A web UI for monitoring and managing Docker containers.
 - **Ports:** 8000:8000/tcp (configurable via DOCKPEEK_PORT)
 - **Profiles:** (not specified)
 
-#### [Portainer](apps/tools/portainer.yaml)
-A lightweight management UI for Docker, Docker Swarm, and Kubernetes.
-- **Ports:** 8000:8000/tcp, 9000:9000/tcp, 9443:9443/tcp
-- **Profiles:** `tools`, `all`
+#### [Homarr](apps/tools/homarr.yaml)
+A modern, feature-rich dashboard for self-hosted services with Docker integration.
+- **Ports:** 7575:7575/tcp (configurable via HOMARR_PORT)
+- **Profiles:** (not specified)
 
 #### [Homepage](apps/tools/homepage.yaml)
 A modern, customizable dashboard for your self-hosted services.

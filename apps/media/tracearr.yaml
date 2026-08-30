@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  tracearr:
+    image: ghcr.io/connorgallopo/tracearr:latest
+    container_name: tracearr
+    profiles: ["media", "all"]
+    environment:
+      TZ: ${TZ}
+      DATABASE_URL: postgres://tracearr:${TRACEARR_DB_PASSWORD:-tracearr}@tracearr-db:5432/tracearr
+      REDIS_URL: redis://tracearr-redis:6379
+      JWT_SECRET: ${TRACEARR_JWT_SECRET}
+      COOKIE_SECRET: ${TRACEARR_COOKIE_SECRET}
+    ports:
+      - ${TRACEARR_PORT:-3001}:3000/tcp
+    depends_on:
+      tracearr-db:
+        condition: service_healthy
+      tracearr-redis:
+        condition: service_started
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      - traefik
+      - tracearr
+    labels:
+      traefik.enable: true
+      traefik.http.services.tracearr.loadbalancer.server.port: 3000
+      dockpeek.tags: media
+
+  tracearr-db:
+    image: timescale/timescaledb-ha:pg18.4-ts2.29.1
+    container_name: tracearr-db
+    profiles: ["media", "all"]
+    command: postgres -c timescaledb.license=timescale -c timescaledb.telemetry_level=off
+    environment:
+      POSTGRES_USER: tracearr
+      POSTGRES_PASSWORD: ${TRACEARR_DB_PASSWORD:-tracearr}
+      POSTGRES_DB: tracearr
+    volumes:
+      - tracearr_db_data:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracearr"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      - tracearr
+
+  tracearr-redis:
+    image: redis:8-alpine
+    container_name: tracearr-redis
+    profiles: ["media", "all"]
+    volumes:
+      - tracearr_redis_data:/data
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      - tracearr
+
+networks:
+  tracearr: ~
+
+volumes:
+  tracearr_db_data:
+  tracearr_redis_data:

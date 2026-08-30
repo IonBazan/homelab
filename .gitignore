@@ -1,4 +1,7 @@
 /data/
 /.env
+/.env.gluetun
+/.env.gluetun.nordvpn
+/.env.gluetun.wireguard
 /.vscode
 /apps/config/ddns-updater

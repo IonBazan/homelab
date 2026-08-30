@@ -6,18 +6,17 @@ services:
     profiles: ["vpn", "all"]
     cap_add:
       - NET_ADMIN
+    env_file:
+      - ../../.env.gluetun
     networks:
       - vpn
       - traefik
     ports:
       - ${QBITTORRENT_PORT:-8081}:${QBITTORRENT_PORT:-8081}/tcp
-    environment:
-      VPN_SERVICE_PROVIDER: nordvpn
-      VPN_TYPE: openvpn
-      OPENVPN_USER: ${NORDVPN_USER}
-      OPENVPN_PASSWORD: ${NORDVPN_PASS}
+      - ${TORRENT_PORT:-6881}:${TORRENT_PORT:-6881}/tcp
+      - ${TORRENT_PORT:-6881}:${TORRENT_PORT:-6881}/udp
     sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1  # Recomended if using ipv4 only
+      - net.ipv6.conf.all.disable_ipv6=1
     healthcheck:
       test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
       interval: 30s
