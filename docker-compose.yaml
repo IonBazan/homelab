@@ -10,10 +10,8 @@ include:
   - apps/network/ddns-updater.yaml
   - apps/network/pihole.yaml
   - apps/network/gluetun.yaml
-  - apps/network/netalertx.yaml
   - apps/network/tailscale.yaml
   - apps/network/traefik.yaml
-  - apps/network/whoami.yaml
   - apps/network/gangplank.yaml
   # Media
   - apps/media/plex.yaml
@@ -26,8 +24,6 @@ include:
   - apps/media/tracearr.yaml
   # Tools
   - apps/tools/dockpeek.yaml
-  - apps/tools/openlist.yaml
-  - apps/tools/homepage.yaml
   - apps/tools/homarr.yaml
 
 networks:

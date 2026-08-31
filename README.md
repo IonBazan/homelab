@@ -23,7 +23,6 @@ You can choose the services to deploy in your setup using different [Docker Comp
 - `media` - Media tools - all the *arrs, Jellyfin
 - `automation` - Home automation tools
 - `vpn` - Gluetun and qBittorrent
-- `tools` - additional tools like Portainer
 - `all` - All above
 
 Additionally, following are not included in `all` as they are quite optional:
@@ -146,11 +145,6 @@ ln -sf .env.gluetun.wireguard .env.gluetun
 docker compose up -d --force-recreate gluetun qbittorrent
 ```
 
-#### [NetAlertX](apps/network/netalertx.yaml)
-Network device monitoring and alerting tool for your home network.
-- **Ports:** host
-- **Profiles:** (not specified)
-
 #### [Pi-hole](apps/network/pihole.yaml)
 Network-wide ad blocker and DNS sinkhole for privacy and security.
 - **Ports:** 53:53/tcp, 53:53/udp, 81:80/tcp
@@ -166,11 +160,6 @@ Modern reverse proxy and load balancer for microservices and web applications.
 - **Ports:** 80:80/tcp, 443:443/tcp, 8080:8080/tcp
 - **Profiles:** `traefik`
 
-#### [Whoami](apps/network/whoami.yaml)
-A tiny Go webserver that prints OS and request information, useful for testing and debugging.
-- **Ports:** (not specified)
-- **Profiles:** (not specified)
-
 ### Tools
 
 #### [Dockpeek](apps/tools/dockpeek.yaml)
@@ -182,16 +171,6 @@ A web UI for monitoring and managing Docker containers.
 A modern, feature-rich dashboard for self-hosted services with Docker integration.
 - **Ports:** 7575:7575/tcp (configurable via HOMARR_PORT)
 - **Profiles:** (not specified)
-
-#### [Homepage](apps/tools/homepage.yaml)
-A modern, customizable dashboard for your self-hosted services.
-- **Ports:** 3000:3000/tcp (configurable via HOMEPAGE_PORT)
-- **Profiles:** (not specified)
-
-#### [OpenList](apps/tools/openlist.yaml)
-A file listing and sharing service for local and remote storage providers, with the shared media volume mounted at `/media`.
-- **Ports:** 5244:5244/tcp (configurable via OPENLIST_PORT), 5245:5245/tcp (configurable via OPENLIST_S3_PORT)
-- **Profiles:** `tools`, `all`
 
 ## Contributing
 
