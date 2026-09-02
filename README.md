@@ -76,8 +76,14 @@ A free software media system that puts you in control of managing and streaming 
 
 #### [Plex](apps/media/plex.yaml)
 A popular media server for streaming your personal media collection to any device.
-- **Ports:** 32400:32400/tcp, 8324:8324/tcp, 32469:32469/tcp, 1900:1900/udp, 32410:32410/udp, 32412:32412/udp, 32413:32413/udp, 32414:32414/udp
+- **Ports:** 32400:32400/tcp (configurable via PLEX_PORT), 8324:8324/tcp, 32469:32469/tcp, 1900:1900/udp, 32410:32410/udp, 32412:32412/udp, 32413:32413/udp, 32414:32414/udp
 - **Profiles:** `media`, `all`
+
+Passes the host's `/dev/dri` through for Intel QuickSync / VAAPI hardware transcoding. Set
+`RENDER_GID` in `.env` to the host's `render` group id (`getent group render | cut -d: -f3`),
+then enable *Settings > Transcoder > Use hardware acceleration when available* in Plex — this
+needs an active Plex Pass. Transcodes are written to `/transcode` (`PLEX_TRANSCODE_DIR`,
+defaults to `/tmp`) instead of the config volume.
 
 #### [Prowlarr](apps/media/prowlarr.yaml)
 An indexer manager/proxy for *arr applications, supporting Usenet and BitTorrent indexers.

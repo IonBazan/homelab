@@ -5,7 +5,7 @@ services:
     container_name: plex
     profiles: ["media", "all"]
     ports:
-      - 32400:32400/tcp
+      - ${PLEX_PORT:-32400}:32400/tcp
       - 8324:8324/tcp
       - 32469:32469/tcp
       - 1900:1900/udp
@@ -14,25 +14,29 @@ services:
       - 32413:32413/udp
       - 32414:32414/udp
     environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
+      PLEX_UID: ${PUID}
+      PLEX_GID: ${PGID}
       TZ: ${TZ}
       VERSION: docker
       PLEX_CLAIM: ${PLEX_CLAIM}
-      ADVERTISE_IP: http://${PHYSICAL_SERVER_IP}:32400,http://${PUBLIC_DOMAIN}:${PLEX_PUBLIC_IP:-32400}
+      ADVERTISE_IP: http://${PHYSICAL_SERVER_IP}:${PLEX_PORT:-32400},http://${PUBLIC_DOMAIN}:${PLEX_PUBLIC_PORT:-32400}
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "${RENDER_GID:-104}"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - plex_data:/config
+      - ${PLEX_TRANSCODE_DIR:-/tmp}:/transcode
       - myMedia:/mnt/media
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    networks:
+      - traefik
     labels:
-      gangplank.forward: "32400/tcp"
+      gangplank.forward: "${PLEX_PORT:-32400}/tcp"
       traefik.enable: false
-      dockpeek.ports: 32400
+      dockpeek.ports: ${PLEX_PORT:-32400}
       dockpeek.tags: media
-#        - homepage.icon=emby.png
-#        - homepage.href=http://emby.home/
-#        - homepage.description=Media server
 
 volumes:
   plex_data:
