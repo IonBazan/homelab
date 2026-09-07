@@ -7,7 +7,7 @@ services:
       - ${DDNS_UPDATER_PORT:-8001}:8000/tcp
     volumes:
       - ../config/ddns-updater:/updater/data
-    profiles: ["all"]
+    profiles: ["network", "all"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
