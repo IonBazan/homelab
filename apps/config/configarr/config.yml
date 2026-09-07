@@ -1,6 +1,26 @@
 trashGuideUrl: https://github.com/TRaSH-Guides/Guides
 recyclarrConfigUrl: https://github.com/recyclarr/config-templates
 
+# Shared qBittorrent download client. The `<<:` merge keys below need
+# CONFIGARR_ENABLE_MERGE=true (set in apps/media/configarr.yaml).
+# host is `gluetun` because qBittorrent shares gluetun's network namespace;
+# `port` must match QBITTORRENT_PORT (default 8081). Credentials come from the
+# same env vars the qbittorrent-config seeder uses, so the *arr client stays in
+# sync with the WebUI login (update_password: true re-pushes it on every run).
+x-download-clients:
+  qbittorrent: &qbittorrent
+    name: qBittorrent
+    type: qbittorrent
+    enable: true
+    remove_completed_downloads: true
+    remove_failed_downloads: true
+    fields: &qbittorrent-fields
+      host: gluetun
+      port: 8081
+      use_ssl: false
+      username: !env QBITTORRENT_USERNAME
+      password: !env QBITTORRENT_PASSWORD
+
 sonarr:
   series:
     base_url: http://sonarr:8989
@@ -19,6 +39,14 @@ sonarr:
 
     custom_formats: []
 
+    download_clients:
+      update_password: true
+      data:
+        - <<: *qbittorrent
+          fields:
+            <<: *qbittorrent-fields
+            tv_category: tv
+
 radarr:
   movies:
     base_url: http://radarr:7878
@@ -36,3 +64,11 @@ radarr:
       - template: radarr-custom-formats-hd-bluray-web
 
     custom_formats: []
+
+    download_clients:
+      update_password: true
+      data:
+        - <<: *qbittorrent
+          fields:
+            <<: *qbittorrent-fields
+            movie_category: movies

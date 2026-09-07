@@ -22,6 +22,9 @@ diff against their neighbours.
   rules, pihole entrypoint). Anything a container reads from disk lives here, not in `/data`.
 - `.env.example`, `.env.gluetun.example` — tracked templates. The real `.env`, `.env.gluetun`
   and the provider-specific `.env.gluetun.*` files are gitignored and hold the actual secrets.
+- `setup-env.sh` — first-run bootstrap: creates `.env` from the template, generates the random
+  secrets, detects host values (LAN IP/CIDR, timezone, PUID/PGID), scaffolds `.env.gluetun`.
+  Idempotent. Keep it in sync when you add variables (see "Adding an app").
 - `README.md` — a per-service catalogue with ports and profiles, kept in sync with `apps/`.
 
 ## Conventions
@@ -32,7 +35,7 @@ diff against their neighbours.
   should not need comments.
 - Always set `container_name` — traefik and the `myMedia` mounts all key off it.
 - `restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}` on every service (traefik itself is
-  the exception, it uses `always`; `configarr` is a run-once tool and uses `"no"`).
+  the exception, it uses `always`; run-once helpers — `configarr`, `qbittorrent-config` — use `"no"`).
 - Use map syntax for `environment:` (`KEY: value`).
 - Declare named volumes in a `volumes:` block at the bottom of the same app file, prefixed with
   the app name (`radarr_data`, `tracearr_db_data`).
@@ -77,7 +80,10 @@ profiles it plausibly belongs to, always including `all`:
 
 1. Write `apps/<category>/<app>.yaml` following the conventions above.
 2. Add the `include:` line to `docker-compose.yaml` under the right category.
-3. Add any new variables to `.env.example`.
+3. Add any new variables to `.env.example`. If a variable is a random secret (API key,
+   encryption/JWT secret, password) or derivable from the host (an IP, CIDR, id, timezone),
+   also wire it into `setup-env.sh` — the `GEN` array for random values, the `fill_detected`
+   block for host values — so a fresh `.env` comes up ready to launch.
 4. Add a `#### [App](apps/<category>/<app>.yaml)` entry to the README service list, with the
    one-line description, ports and profiles.
 5. Prefer the upstream project's own recommended compose file as the starting point, then strip

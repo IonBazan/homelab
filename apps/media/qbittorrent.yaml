@@ -11,7 +11,6 @@ services:
       WEBUI_PORT: ${QBITTORRENT_PORT:-8081}
     volumes:
       - qbittorrent_data:/config
-      - ../config/qbittorrent/qBittorrent.conf:/config/qBittorrent/qBittorrent.conf
       - myMedia:/media
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     # Shares gluetun's network namespace; its Traefik router is defined on the
@@ -20,6 +19,8 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+      qbittorrent-config:
+        condition: service_completed_successfully
     labels:
       homepage.group: Media Management
       homepage.name: qBittorrent
@@ -30,6 +31,26 @@ services:
       homepage.widget.url: http://gluetun:${QBITTORRENT_PORT:-8081}
       homepage.widget.username: ${QBITTORRENT_USERNAME:-admin}
       homepage.widget.password: ${QBITTORRENT_PASSWORD:-}
+
+  # Runs before qBittorrent: seeds qBittorrent.conf into the volume if absent, and
+  # (when QBITTORRENT_PASSWORD is set) writes the WebUI login in qBittorrent's own
+  # PBKDF2 format. Idempotent - the conf only changes when the env var changes.
+  # Delete the qbittorrent_data volume to re-apply the full seed.
+  qbittorrent-config:
+    image: python:3.13-alpine
+    container_name: qbittorrent-config
+    profiles: ["vpn", "all"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-admin}
+      QBITTORRENT_PASSWORD: ${QBITTORRENT_PASSWORD:-}
+    volumes:
+      - qbittorrent_data:/config
+      - ../config/qbittorrent/qBittorrent.conf:/seed.conf:ro
+      - ../config/qbittorrent/apply-config.py:/apply-config.py:ro
+    command: python3 /apply-config.py
+    restart: "no"
 
 volumes:
   qbittorrent_data:

@@ -54,6 +54,20 @@ Easy to set up - simply copy the files to any machine, change `.env` parameters 
 ```bash
 git clone git@github.com:IonBazan/homelab.git
 cd homelab
+./setup-env.sh
+```
+
+`setup-env.sh` creates `.env` from `.env.example`, generates every secret that can be
+random (the `*_API_KEY`s, `HOMARR_SECRET_ENCRYPTION_KEY`, the two `TRACEARR_*` secrets,
+and the qBittorrent / Pi-hole / Tracearr-DB passwords), detects host values from the
+default-route interface (`PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`,
+`PUID`/`PGID`), scaffolds `.env.gluetun` from the template, and prints the handful of
+tokens you still have to fetch yourself. It never overwrites a value you have edited
+(host values overwrite only the shipped placeholder), so it is safe to re-run.
+
+To do it by hand instead:
+
+```bash
 cp .env.example .env
 cp .env.gluetun.example .env.gluetun.nordvpn      # or .env.gluetun.wireguard
 ln -sf .env.gluetun.nordvpn .env.gluetun          # pick the active VPN config
@@ -63,31 +77,36 @@ ln -sf .env.gluetun.nordvpn .env.gluetun          # pick the active VPN config
 
 ### 2. Fill in `.env`
 
-Work top to bottom; anything left commented is optional and shown at its default.
+Work top to bottom; anything left commented is optional and shown at its default. Rows
+that `setup-env.sh` already filled are marked _(auto)_.
 
 | Variable | Needed for | Where to get / how to set it |
 |---|---|---|
 | `DOMAIN_NAME` | Traefik, DNS | The domain you route services under, e.g. `homelab.example.com`. Every service is published at `<name>.${DOMAIN_NAME}`. |
-| `TZ` | all | IANA name, e.g. `Europe/Warsaw` ([list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). |
-| `PUID` / `PGID` | media apps | `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
+| `TZ` | all | _(auto)_ IANA name, e.g. `Europe/Warsaw` ([list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). |
+| `PUID` / `PGID` | media apps | _(auto)_ `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
 | `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
 | `COMPOSE_PROFILES` | service selection | Comma-separated (see [Profiles](#profiles)). `all` omits `traefik`, `pihole`, `ai` — add them explicitly, e.g. `all,traefik`. |
-| `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
-| `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | Your LAN CIDR, e.g. `192.168.1.0/24`. |
+| `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | _(auto)_ Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
+| `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | _(auto)_ Your LAN CIDR, e.g. `192.168.1.0/24`. |
 | `PUBLIC_DOMAIN` | Plex remote access | A public hostname tracking your home IP — see [Networking](#networking). |
 | `PLEX_CLAIM` | Plex first run | Fresh token from <https://www.plex.tv/claim> (valid ~4 min); can be blanked after first start. |
 | `TAILSCALE_TOKEN` | Tailscale | Tailscale admin → **Settings → Keys → Generate auth key**. Mark it *Reusable* + *Pre-approved* to skip manual route approval. |
 | `CF_DNS_API_TOKEN` | Traefik HTTPS | Cloudflare → **My Profile → API Tokens → Create Token → "Edit zone DNS"**, scoped to your zone (`Zone:DNS:Edit` + `Zone:Zone:Read`). |
 | `CF_API_EMAIL` | Traefik HTTPS | Your Cloudflare account email (used as the Let's Encrypt account email). |
 | `TRAEFIK_DASHBOARD_AUTH` | Traefik dashboard | **Optional**, blank = no auth. `user:hash` from `htpasswd -nbB admin 'pass' \| sed -e 's/\$/\$\$/g'` (every `$` doubled for `.env`). |
-| `HOMARR_SECRET_ENCRYPTION_KEY` | Homarr | `openssl rand -hex 32` |
-| `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | `openssl rand -hex 32` each |
-| `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | `openssl rand -hex 16` each. Leave blank to let each app self-generate (Configarr then won't run). |
+| `HOMARR_SECRET_ENCRYPTION_KEY` | Homarr | _(auto)_ `openssl rand -hex 32` |
+| `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | _(auto)_ `openssl rand -hex 32` each |
+| `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | _(auto)_ `openssl rand -hex 16` each. Leave blank to let each app self-generate (Configarr then won't run). |
+| `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every `up -d` and wires the Homepage widget — see [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank = set it in the UI. |
+| `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
 
 ### 3. Fill in `.env.gluetun` (only with the `vpn` profile)
 
-Edit the file you symlinked and uncomment **one** provider block:
+`setup-env.sh` already created `.env.gluetun.nordvpn`, symlinked `.env.gluetun` to it, and set
+`FIREWALL_OUTBOUND_SUBNETS` from `PHYSICAL_SERVER_NETWORK`. Edit that file and uncomment **one**
+provider block (switch to WireGuard by pointing the symlink at `.env.gluetun.wireguard`):
 
 - **NordVPN** — dashboard → *NordVPN manual setup* → copy the **service credentials** into `OPENVPN_USER` / `OPENVPN_PASSWORD`.
 - **Custom WireGuard** — copy the values from your provider's `.conf` (`WIREGUARD_PRIVATE_KEY`, `WIREGUARD_ADDRESSES`, peer `WIREGUARD_PUBLIC_KEY`, `VPN_ENDPOINT_IP`, `VPN_ENDPOINT_PORT`).
@@ -199,18 +218,27 @@ A feature-rich and open-source BitTorrent client with a web UI, running behind a
 - **Profiles:** `vpn`, `all`
 - **Traefik:** its router is defined on the `gluetun` service (qBittorrent shares gluetun's network namespace).
 
-Ships a seed [`apps/config/qbittorrent/qBittorrent.conf`](apps/config/qbittorrent/qBittorrent.conf)
-mounted over the live config so the container starts with the legal notice already accepted,
-downloads saved to `/media/Downloads` and reverse-proxy-friendly WebUI settings. qBittorrent
-rewrites this file as you change settings in the UI. The torrent listen port is left unset so
-qBittorrent picks and persists one on first run — set it in the UI to match `TORRENT_PORT` if
-you need inbound connections through the VPN.
+A run-once `qbittorrent-config` container ([`apply-config.py`](apps/config/qbittorrent/apply-config.py))
+runs before qBittorrent each `up -d`. It copies the seed
+[`apps/config/qbittorrent/qBittorrent.conf`](apps/config/qbittorrent/qBittorrent.conf) into the
+`qbittorrent_data` volume **only if it isn't there yet** (legal notice accepted, downloads at
+`/media/Downloads`, reverse-proxy-friendly WebUI settings), then, if `QBITTORRENT_PASSWORD` is
+set, writes `WebUI\Username` / `WebUI\Password_PBKDF2` in qBittorrent's own PBKDF2-HMAC-SHA512
+format. That step is idempotent — the conf only changes when you change the env var — so the
+login survives every restart and recreate. The same `QBITTORRENT_PASSWORD` /
+`QBITTORRENT_USERNAME` feed the Homepage widget, so the tile lights up with no extra config.
 
-The WebUI **requires login on every path** (the subnet whitelist that used to wave through
-Docker/proxy traffic is disabled). On first start qBittorrent logs a temporary password
-(`docker compose logs qbittorrent | grep -i password`) — log in, set your own under
-*Options > Web UI*, then add that username/password to each *arr's qBittorrent download-client
-config.
+With `QBITTORRENT_PASSWORD` set, manage the password **in `.env`, not the UI** — a UI change is
+reverted on the next `up -d`. Leave it blank to do the opposite: qBittorrent then owns the login,
+it logs a temporary password on first start
+(`docker compose logs qbittorrent | grep -i password`), and whatever you set under
+*Options > Web UI* persists. With `QBITTORRENT_PASSWORD` set, Configarr wires the client into
+Sonarr/Radarr for you; otherwise add it to each *arr by hand.
+
+Nuke the `qbittorrent_data` volume to re-apply the full seed. The torrent listen port is left
+unset so qBittorrent picks and persists one on first run — set it in the UI to match
+`TORRENT_PORT` for inbound connections through the VPN. The WebUI **requires login on every
+path** (the subnet whitelist that used to wave through Docker/proxy traffic is disabled).
 
 #### [Radarr](apps/media/radarr.yaml)
 A movie collection manager for Usenet and BitTorrent users, automating downloads and organization.
@@ -250,6 +278,15 @@ profiles into Sonarr and Radarr, driven by [`apps/config/configarr/config.yml`](
 Requires `SONARR_API_KEY` and `RADARR_API_KEY` in `.env`; it reads them via `!env` and reaches
 each app over the `traefik` network. It also manages the root folders, pointing Sonarr at
 `/media/Shows` and Radarr at `/media/Movies` (the `Shows` / `Movies` dirs under `MEDIA_DIR`).
+
+It also adds the **qBittorrent download client** to both apps (`download_clients` in
+`config.yml`, shared via a YAML anchor — `CONFIGARR_ENABLE_MERGE=true` is set on the
+container). The client points at `gluetun:8081` (qBittorrent shares gluetun's netns) with
+categories `tv` / `movies`, and authenticates with `QBITTORRENT_USERNAME` /
+`QBITTORRENT_PASSWORD` — `update_password: true` re-pushes the password each run, so it tracks
+the same `.env` value the qBittorrent seeder uses. Set `QBITTORRENT_PASSWORD` (or run
+`setup-env.sh`) or the client is created with a blank password and won't connect.
+
 It runs once and exits on `docker compose up -d`; re-run it any time with:
 
 ```bash
