@@ -2,7 +2,7 @@
 services:
   ddns-updater:
     image: qmcgaw/ddns-updater
-    container_name: ddns
+    container_name: ddns-updater
     ports:
       - ${DDNS_UPDATER_PORT:-8001}:8000/tcp
     volumes:
@@ -20,4 +20,3 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.ddns-updater.loadbalancer.server.port: 8000
-      dockpeek.tags: network

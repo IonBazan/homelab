@@ -9,15 +9,13 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - tailscale-data:/var/lib/tailscale
+      - tailscale_data:/var/lib/tailscale
     environment:
       TS_AUTHKEY: ${TAILSCALE_TOKEN}
       TS_ACCEPT_DNS: 'true'
       TS_ROUTES: ${PHYSICAL_SERVER_NETWORK}
     network_mode: host
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-    labels:
-      dockpeek.tags: network
 
 volumes:
-  tailscale-data:
+  tailscale_data:

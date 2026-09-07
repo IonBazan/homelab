@@ -16,8 +16,6 @@ services:
       # network_mode: host, so give Traefik an explicit backend instead of relying
       # on Docker network discovery. Router host = defaultRule (homeassistant.${DOMAIN_NAME}).
       traefik.http.services.homeassistant.loadbalancer.server.url: http://host.docker.internal:8123
-      dockpeek.ports: 8123
-      dockpeek.tags: automation
 
 volumes:
   hass_data:

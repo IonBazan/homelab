@@ -22,12 +22,6 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.radarr.loadbalancer.server.port: 7878
-      homepage.group: Media
-      homepage.name: Radarr
-      homepage.icon: radarr.png
-      homepage.href: http://{{HOSTNAME}}:7878
-      homepage.widget.type: radarr
-      dockpeek.tags: media
 
 volumes:
   radarr_data:

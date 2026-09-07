@@ -22,10 +22,6 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.sonarr.loadbalancer.server.port: 8989
-      dockpeek.tags: media
-#      traefik.http.routers.sonarr.entrypoints: websecure
-#      traefik.http.routers.sonarr.tls: true
-#      traefik.http.routers.sonarr.tls.certresolver: letsencrypt
 
 volumes:
   sonarr_data:

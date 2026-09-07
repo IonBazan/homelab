@@ -19,7 +19,6 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.prowlarr.loadbalancer.server.port: 9696
-      dockpeek.tags: media
 
 volumes:
   prowlarr_data:

@@ -79,6 +79,7 @@ Work top to bottom; anything left commented is optional and shown at its default
 | `TAILSCALE_TOKEN` | Tailscale | Tailscale admin → **Settings → Keys → Generate auth key**. Mark it *Reusable* + *Pre-approved* to skip manual route approval. |
 | `CF_DNS_API_TOKEN` | Traefik HTTPS | Cloudflare → **My Profile → API Tokens → Create Token → "Edit zone DNS"**, scoped to your zone (`Zone:DNS:Edit` + `Zone:Zone:Read`). |
 | `CF_API_EMAIL` | Traefik HTTPS | Your Cloudflare account email (used as the Let's Encrypt account email). |
+| `TRAEFIK_DASHBOARD_AUTH` | Traefik dashboard | **Optional**, blank = no auth. `user:hash` from `htpasswd -nbB admin 'pass' \| sed -e 's/\$/\$\$/g'` (every `$` doubled for `.env`). |
 | `HOMARR_SECRET_ENCRYPTION_KEY` | Homarr | `openssl rand -hex 32` |
 | `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | `openssl rand -hex 32` each |
 | `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` | Configarr | `openssl rand -hex 16` each. Leave blank to let each app self-generate (Configarr then won't run). |
@@ -129,7 +130,7 @@ homelab.example.com     A   192.168.1.10
 
 ### TLS
 
-Traefik (profile `traefik`) obtains one wildcard certificate for `${DOMAIN_NAME}` + `*.${DOMAIN_NAME}` through the Cloudflare **DNS-01** challenge. That uses only the API token — the record never has to be publicly reachable — so pointing it at a LAN IP is fine. Routers come from the container name: a service is live at `https://<container>.${DOMAIN_NAME}` as soon as it has `traefik.enable: true`. Dashboard: `https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/` (trailing slash required).
+Traefik (profile `traefik`) obtains one wildcard certificate for `${DOMAIN_NAME}` + `*.${DOMAIN_NAME}` through the Cloudflare **DNS-01** challenge. That uses only the API token — the record never has to be publicly reachable — so pointing it at a LAN IP is fine. Routers come from the container name: a service is live at `https://<container>.${DOMAIN_NAME}` as soon as it has `traefik.enable: true`. Dashboard: `https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/` (trailing slash required; unauthenticated unless `TRAEFIK_DASHBOARD_AUTH` is set — see the [Traefik](#traefik) service notes).
 
 ### Tailscale subnet router
 
@@ -316,17 +317,25 @@ on the Traefik container's own labels so no per-service certificate is ever requ
 cert store is the `traefik_certs` volume; delete `acme.json` inside it to force re-issue.
 Needs `CF_DNS_API_TOKEN` (and `CF_API_EMAIL`) in `.env`.
 
-### Tools
+The dashboard is at `https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/` (trailing
+slash required). It has **no auth by default**; set `TRAEFIK_DASHBOARD_AUTH` in `.env` to put
+HTTP basic auth in front of it:
 
-#### [Dockpeek](apps/tools/dockpeek.yaml)
-A web UI for monitoring and managing Docker containers.
-- **Ports:** 8000:8000/tcp (configurable via DOCKPEEK_PORT)
-- **Profiles:** (not specified)
+```bash
+htpasswd -nbB admin 'yourpassword' | sed -e 's/\$/\$\$/g'   # paste result as TRAEFIK_DASHBOARD_AUTH
+```
+
+The shared `middlewares-secure-headers` middleware (nosniff, frame-options, referrer/permissions
+policy) is applied to every proxied route via the `websecure` entrypoint; edit
+[`apps/config/traefik/rules/middlewares.yml`](apps/config/traefik/rules/middlewares.yml) to change it.
+
+### Tools
 
 #### [Homarr](apps/tools/homarr.yaml)
 A modern, feature-rich dashboard for self-hosted services with Docker integration.
 - **Ports:** 7575:7575/tcp (configurable via HOMARR_PORT)
-- **Profiles:** (not specified)
+- **Profiles:** none set — always runs
+- Proxied by Traefik at `homarr.${DOMAIN_NAME}`.
 
 ## Contributing
 

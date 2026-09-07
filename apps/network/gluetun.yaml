@@ -23,8 +23,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     labels:
-      dockpeek.tags: network
       traefik.enable: true
       traefik.http.routers.qbittorrent.rule: Host(`qbittorrent.${DOMAIN_NAME}`)
       traefik.http.routers.qbittorrent.service: qbittorrent

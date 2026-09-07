@@ -35,8 +35,6 @@ services:
     labels:
       gangplank.forward: "${PLEX_PORT:-32400}/tcp"
       traefik.enable: false
-      dockpeek.ports: ${PLEX_PORT:-32400}
-      dockpeek.tags: media
 
 volumes:
   plex_data:

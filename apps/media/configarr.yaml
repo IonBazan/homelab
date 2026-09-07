@@ -19,8 +19,6 @@ services:
     restart: "no"
     networks:
       - traefik
-    labels:
-      dockpeek.tags: media
 
 volumes:
   configarr_repos:

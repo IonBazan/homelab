@@ -14,7 +14,6 @@ services:
         protocol: tcp
         mode: host
     environment:
-      CF_API_EMAIL: ${CF_API_EMAIL}
       CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
       TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${CF_API_EMAIL}
       DOMAIN_NAME: ${DOMAIN_NAME}
@@ -32,6 +31,7 @@ services:
     command:
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
+      - --entrypoints.websecure.http.middlewares=middlewares-secure-headers@file
       - --certificatesresolvers.letsencrypt.acme.caserver=${LETS_ENCRYPT_ENV:-https://acme-v02.api.letsencrypt.org/directory}
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -44,10 +44,11 @@ services:
       traefik.http.routers.traefik.rule: Host(`${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}`)
       traefik.http.routers.traefik.service: api@internal
       traefik.http.routers.traefik.entrypoints: websecure
-      traefik.http.routers.traefik.middlewares: traefik-dashboard-redirect
+      # basic auth is added only when TRAEFIK_DASHBOARD_AUTH is set (blank = no auth)
+      traefik.http.routers.traefik.middlewares: traefik-dashboard-redirect${TRAEFIK_DASHBOARD_AUTH:+,traefik-dashboard-auth}
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: ^https://[^/]+/?$$
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
-      dockpeek.tags: network
+      traefik.http.middlewares.traefik-dashboard-auth.basicauth.users: ${TRAEFIK_DASHBOARD_AUTH:-}
 
 volumes:
   traefik_certs:

@@ -15,8 +15,8 @@ services:
       - SYS_NICE
     environment:
       FTLCONF_misc_dnsmasq_lines: address=/${DOMAIN_NAME}/${PHYSICAL_SERVER_IP}
-      VIRTUAL_HOST: pihole.${DOMAIN_NAME}
       FTLCONF_dns_listeningMode: 'all'
+      FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD:-}
     networks:
       - traefik
     volumes:
@@ -24,8 +24,6 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.pihole.loadbalancer.server.port: 80
-      dockpeek.tags: network
-      dockpeek.ports: 81
 
 volumes:
   pihole_data:

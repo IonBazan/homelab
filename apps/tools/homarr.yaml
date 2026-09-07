@@ -15,7 +15,8 @@ services:
       TZ: ${TZ}
       SECRET_ENCRYPTION_KEY: ${HOMARR_SECRET_ENCRYPTION_KEY}
     labels:
-      dockpeek.tags: tools
+      traefik.enable: true
+      traefik.http.services.homarr.loadbalancer.server.port: 7575
 
 volumes:
   homarr_data:

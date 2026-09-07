@@ -14,13 +14,12 @@ services:
       - ../config/qbittorrent/qBittorrent.conf:/config/qBittorrent/qBittorrent.conf
       - myMedia:/media
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    # Shares gluetun's network namespace; its Traefik router is defined on the
+    # gluetun service (apps/network/gluetun.yaml).
     network_mode: service:gluetun
     depends_on:
       gluetun:
         condition: service_healthy
-    labels:
-      # qbittorrent shares gluetun's network namespace, so its Traefik router is
-      # defined on the gluetun service (see apps/network/gluetun.yaml).
-      dockpeek.tags: media
+
 volumes:
   qbittorrent_data:

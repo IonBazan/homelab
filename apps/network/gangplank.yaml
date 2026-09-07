@@ -11,5 +11,3 @@ services:
       TZ: ${TZ}
     network_mode: host
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-    labels:
-      dockpeek.tags: network

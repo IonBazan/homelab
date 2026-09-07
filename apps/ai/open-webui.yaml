@@ -9,8 +9,6 @@ services:
       - open_webui_data:/app/backend/data
     profiles: ["ai", "all"]
     environment:
-      PUID: ${PUID}
-      PGID: ${PGID}
       TZ: ${TZ}
     networks:
       - traefik
@@ -18,6 +16,7 @@ services:
     labels:
       traefik.enable: true
       traefik.http.routers.open-webui.rule: "Host(`ai.${DOMAIN_NAME}`)"
+      traefik.http.services.open-webui.loadbalancer.server.port: 8080
 
 volumes:
   open_webui_data:

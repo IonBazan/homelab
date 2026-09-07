@@ -30,11 +30,10 @@ diff against their neighbours.
 
 - Start every app file with the `yaml-language-server` schema comment; the rest of the file
   should not need comments.
-- Always set `container_name` — traefik, dockpeek and the `myMedia` mounts all key off it.
+- Always set `container_name` — traefik and the `myMedia` mounts all key off it.
 - `restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}` on every service (traefik itself is
-  the exception, it uses `always`).
-- Use map syntax for `environment:` (`KEY: value`). The list form in `traefik.yaml` and
-  `dockpeek.yaml` predates the convention; don't copy it into new files.
+  the exception, it uses `always`; `configarr` is a run-once tool and uses `"no"`).
+- Use map syntax for `environment:` (`KEY: value`).
 - Declare named volumes in a `volumes:` block at the bottom of the same app file, prefixed with
   the app name (`radarr_data`, `tracearr_db_data`).
 
@@ -55,7 +54,7 @@ profiles it plausibly belongs to, always including `all`:
 - An app that ships its own database or cache declares a private network inside its own file and
   keeps the supporting containers off `traefik`.
 - Publish ports as `${APP_PORT:-<default>}:<container-port>/tcp`. Check the default is free —
-  Homepage already holds 3000, OpenList 5244/5245, and the *arr apps their usual ports.
+  Open-WebUI already holds 3000, Homarr 7575, and the *arr apps their usual ports.
 
 ### Labels
 
@@ -63,9 +62,6 @@ profiles it plausibly belongs to, always including `all`:
   `traefik.enable: true`. The router hostname comes from the container name plus
   `${DOMAIN_NAME}`, so a plain `traefik.http.services.<app>.loadbalancer.server.port` is usually
   all the extra configuration needed.
-- `dockpeek.tags: <category>` on everything; add `dockpeek.ports` when the published port isn't
-  what dockpeek should link to.
-- `homepage.*` labels are optional and only present on a few services.
 - `gangplank.forward: "<port>/<proto>"` marks ports that should be forwarded on the router.
 
 ### Secrets and environment

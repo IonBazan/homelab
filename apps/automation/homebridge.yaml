@@ -16,9 +16,7 @@ services:
     environment:
       TZ: ${TZ}
     labels:
-      traefik.enable: "false"
-      dockpeek.ports: 8581
-      dockpeek.tags: automation
+      traefik.enable: false
 
 volumes:
   homebridge_data:

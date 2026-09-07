@@ -24,7 +24,6 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.tracearr.loadbalancer.server.port: 3000
-      dockpeek.tags: media
 
   tracearr-db:
     image: timescale/timescaledb-ha:pg18.4-ts2.29.1

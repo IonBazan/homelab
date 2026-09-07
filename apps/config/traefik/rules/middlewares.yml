@@ -14,10 +14,6 @@ http:
         accessControlMaxAge: 100
         hostsProxyHeaders:
           - X-Forwarded-Host
-        stsSeconds: 63072000
-        stsIncludeSubdomains: true
-        stsPreload: true
-        forceSTSHeader: true
         customFrameOptionsValue: SAMEORIGIN
         contentTypeNosniff: true
         browserXssFilter: true
