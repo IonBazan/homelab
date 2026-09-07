@@ -20,6 +20,7 @@ services:
     networks:
       - traefik
     labels:
+      traefik.enable: true
       traefik.http.services.bazarr.loadbalancer.server.port: 6767
       dockpeek.tags: media
 

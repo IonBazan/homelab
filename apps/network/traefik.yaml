@@ -13,19 +13,16 @@ services:
         target: 443
         protocol: tcp
         mode: host
-      - 8080:8080
     environment:
-      - CF_API_EMAIL
-      - CF_DNS_API_TOKEN
-      - DOMAIN_NAME
-      - TZ
-      - TRAEFIK_SUBDOMAIN=${TRAEFIK_SUBDOMAIN:-traefik}
+      CF_API_EMAIL: ${CF_API_EMAIL}
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
+      TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${CF_API_EMAIL}
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      TZ: ${TZ}
     volumes:
       - ../config/traefik/rules:/etc/traefik/dynamic:ro
       - ../config/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ../../data/traefik/logs:/logs
-      - ../../data/traefik/traefik:/etc/traefik
-      - ../../data/traefik/certs:/certs
+      - traefik_certs:/certs
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - traefik
@@ -35,14 +32,22 @@ services:
     command:
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
-      - --entrypoints.websecure.http.tls.domains[0].main=${DOMAIN_NAME}
-      - --entrypoints.websecure.http.tls.domains[0].sans="*.${DOMAIN_NAME}"
-      - --entrypoints.websecure.http.tls.certresolver=letsencrypt
+      - --certificatesresolvers.letsencrypt.acme.caserver=${LETS_ENCRYPT_ENV:-https://acme-v02.api.letsencrypt.org/directory}
     extra_hosts:
-      - host.docker.internal:172.17.0.1
+      - host.docker.internal:host-gateway
     labels:
       traefik.enable: true
+      # single wildcard cert served as the default for every router (no per-service certs)
+      traefik.tls.stores.default.defaultgeneratedcert.resolver: letsencrypt
+      traefik.tls.stores.default.defaultgeneratedcert.domain.main: ${DOMAIN_NAME}
+      traefik.tls.stores.default.defaultgeneratedcert.domain.sans: "*.${DOMAIN_NAME}"
+      traefik.http.routers.traefik.rule: Host(`${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}`)
       traefik.http.routers.traefik.service: api@internal
       traefik.http.routers.traefik.entrypoints: websecure
+      traefik.http.routers.traefik.middlewares: traefik-dashboard-redirect
+      traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: ^https://[^/]+/?$$
+      traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
       dockpeek.tags: network
-#      traefik.http.routers.traefik-rtr.middlewares: chain-oauth-google@file
+
+volumes:
+  traefik_certs:

@@ -21,14 +21,17 @@ include:
   - apps/media/prowlarr.yaml
   - apps/media/qbittorrent.yaml
   - apps/media/bazarr.yaml
+  - apps/media/configarr.yaml
   - apps/media/tracearr.yaml
   # Tools
   - apps/tools/dockpeek.yaml
   - apps/tools/homarr.yaml
 
 networks:
-  traefik: ~
-  vpn: ~
+  traefik:
+    name: traefik
+  vpn:
+    name: vpn
 
 
 volumes:

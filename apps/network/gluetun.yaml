@@ -25,3 +25,8 @@ services:
       start_period: 30s
     labels:
       dockpeek.tags: network
+      traefik.enable: true
+      traefik.http.routers.qbittorrent.rule: Host(`qbittorrent.${DOMAIN_NAME}`)
+      traefik.http.routers.qbittorrent.service: qbittorrent
+      traefik.http.services.qbittorrent.loadbalancer.server.port: ${QBITTORRENT_PORT:-8081}
+      traefik.http.services.qbittorrent.loadbalancer.passhostheader: false

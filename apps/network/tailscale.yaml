@@ -13,11 +13,10 @@ services:
     environment:
       TS_AUTHKEY: ${TAILSCALE_TOKEN}
       TS_ACCEPT_DNS: 'true'
+      TS_ROUTES: ${PHYSICAL_SERVER_NETWORK}
     network_mode: host
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     labels:
-      traefik.enable: true
-      traefik.http.services.ddns-updater.loadbalancer.server.port: 8000
       dockpeek.tags: network
 
 volumes:

@@ -11,6 +11,7 @@ services:
       WEBUI_PORT: ${QBITTORRENT_PORT:-8081}
     volumes:
       - qbittorrent_data:/config
+      - ../config/qbittorrent/qBittorrent.conf:/config/qBittorrent/qBittorrent.conf
       - myMedia:/media
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     network_mode: service:gluetun
@@ -18,20 +19,8 @@ services:
       gluetun:
         condition: service_healthy
     labels:
-      - "traefik.enable=true"
-      - "dockpeek.tags=media"
-      # adding a slash to the end
-#      - "traefik.http.middlewares.qb-redirect.redirectregex.regex=^(.*)/qbittorrent"
-#      - "traefik.http.middlewares.qb-redirect.redirectregex.replacement=$$1/qbittorrent/"
-#      - "traefik.http.middlewares.qb-strip.stripprefix.prefixes=/qbittorrent/"
-      # appropriate header changes
-      - "traefik.http.middlewares.qb-headers.headers.customrequestheaders.X-Frame-Options=SAMEORIGIN"
-      - "traefik.http.middlewares.qb-headers.headers.customrequestheaders.Referer="
-      - "traefik.http.middlewares.qb-headers.headers.customrequestheaders.Origin="
-      - "traefik.http.routers.qb.middlewares=qb-headers"
-      # loadbalancer to *not* pass the host header
-      - "traefik.http.services.qb.loadbalancer.server.port=8080"
-      - "traefik.http.services.qb.loadbalancer.passhostheader=false"
-      - "traefik.docker.network=traefik-qb-net"
+      # qbittorrent shares gluetun's network namespace, so its Traefik router is
+      # defined on the gluetun service (see apps/network/gluetun.yaml).
+      dockpeek.tags: media
 volumes:
   qbittorrent_data:

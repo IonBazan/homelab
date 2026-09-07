@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  configarr:
+    image: ghcr.io/raydak-labs/configarr:latest
+    container_name: configarr
+    profiles: ["media", "arrs", "all"]
+    environment:
+      TZ: ${TZ}
+      SONARR_API_KEY: ${SONARR_API_KEY:-}
+      RADARR_API_KEY: ${RADARR_API_KEY:-}
+    volumes:
+      - ../config/configarr:/app/config
+      - configarr_repos:/app/repos
+    depends_on:
+      - sonarr
+      - radarr
+    # Run-once tool: it syncs TRaSH-Guides config into Sonarr/Radarr and exits.
+    # A restart policy would make Docker relaunch it every minute, so keep it "no".
+    restart: "no"
+    networks:
+      - traefik
+    labels:
+      dockpeek.tags: media
+
+volumes:
+  configarr_repos:
