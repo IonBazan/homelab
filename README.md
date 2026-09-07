@@ -82,7 +82,7 @@ Work top to bottom; anything left commented is optional and shown at its default
 | `TRAEFIK_DASHBOARD_AUTH` | Traefik dashboard | **Optional**, blank = no auth. `user:hash` from `htpasswd -nbB admin 'pass' \| sed -e 's/\$/\$\$/g'` (every `$` doubled for `.env`). |
 | `HOMARR_SECRET_ENCRYPTION_KEY` | Homarr | `openssl rand -hex 32` |
 | `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | `openssl rand -hex 32` each |
-| `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` | Configarr | `openssl rand -hex 16` each. Leave blank to let each app self-generate (Configarr then won't run). |
+| `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | `openssl rand -hex 16` each. Leave blank to let each app self-generate (Configarr then won't run). |
 | `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
 
 ### 3. Fill in `.env.gluetun` (only with the `vpn` profile)
@@ -222,6 +222,9 @@ A companion app for Radarr and Sonarr that manages and downloads subtitles for m
 - **Ports:** 6767:6767/tcp (configurable via BAZARR_PORT)
 - **Profiles:** `media`, `arrs`, `all`
 
+Set `BAZARR_API_KEY` in `.env` (`openssl rand -hex 16`) to pin the API key via the
+`BAZARR__AUTH__APIKEY` environment variable instead of letting Bazarr generate one.
+
 #### [Tracearr](apps/media/tracearr.yaml)
 A self-hosted playback tracker and analytics dashboard for Plex, Jellyfin and Emby. Ships with its own TimescaleDB and Redis containers on a private `tracearr` network.
 - **Ports:** 3001:3000/tcp (configurable via TRACEARR_PORT)
@@ -331,17 +334,45 @@ HTTP basic auth in front of it:
 htpasswd -nbB admin 'yourpassword' | sed -e 's/\$/\$\$/g'   # paste result as TRAEFIK_DASHBOARD_AUTH
 ```
 
+`${DOMAIN_NAME}` (the bare apex) and `home.${DOMAIN_NAME}` both serve [Homepage](#homepage).
+Any request whose Host is **not** `${DOMAIN_NAME}` or a subdomain of it — a foreign domain,
+`*.local`, the bare LAN IP, a stale bookmark — gets a 302 to `TRAEFIK_CATCHALL_URL` (set it in
+`.env`, e.g. `http://naslab.local:9999`; blank disables it). The `http`→`https` redirect is
+scoped to `${DOMAIN_NAME}` so those foreign hosts reach the redirect over plain HTTP without a
+cert warning. Unknown subdomains *of* `${DOMAIN_NAME}` just 404 — they're "yours", so no
+external redirect.
+
 The shared `middlewares-secure-headers` middleware (nosniff, frame-options, referrer/permissions
 policy) is applied to every proxied route via the `websecure` entrypoint; edit
 [`apps/config/traefik/rules/middlewares.yml`](apps/config/traefik/rules/middlewares.yml) to change it.
 
 ### Tools
 
+#### [Homepage](apps/tools/homepage.yaml)
+Start page listing every service, grouped, with live service widgets and top-of-page info
+widgets (system resources, weather, clock, web search).
+- **Ports:** none — proxied only
+- **Profiles:** `tools`, `all`
+- Reachable at `https://home.${DOMAIN_NAME}` **and** the bare apex `https://${DOMAIN_NAME}`.
+
+The dashboard builds itself from `homepage.*` labels on each container (`homepage.group`,
+`homepage.name`, `homepage.icon`, `homepage.href`, `homepage.widget.*`) — add a service, it
+appears. Info widgets and layout live in [`apps/config/homepage/`](apps/config/homepage/)
+(`widgets.yaml`, `settings.yaml`, `docker.yaml`, `bookmarks.yaml`). Set the weather
+`latitude`/`longitude` in `widgets.yaml` to your location. Icons use the
+[selfh.st](https://selfh.st/icons/) set via the `sh-<name>.webp` prefix (`mdi-…` for the few
+without one).
+
+Service widgets pull stats when a credential is present in `.env`, otherwise the tile is
+link-only: Sonarr / Radarr / Prowlarr (`*_API_KEY`), Pi-hole (`PIHOLE_PASSWORD`), Plex
+(`PLEX_TOKEN`), Jellyfin (`JELLYFIN_API_KEY`), Bazarr (`BAZARR_API_KEY`), Home Assistant
+(`HOMEASSISTANT_TOKEN`), qBittorrent (`QBITTORRENT_USERNAME` / `QBITTORRENT_PASSWORD`).
+
 #### [Homarr](apps/tools/homarr.yaml)
-A modern, feature-rich dashboard for self-hosted services with Docker integration.
+An alternative self-hosted dashboard with Docker integration, configured through its own UI.
 - **Ports:** 7575:7575/tcp (configurable via HOMARR_PORT)
 - **Profiles:** none set — always runs
-- Proxied by Traefik at `homarr.${DOMAIN_NAME}`.
+- Proxied by Traefik at `homarr.${DOMAIN_NAME}`. Redundant with Homepage — drop one.
 
 ## Contributing
 

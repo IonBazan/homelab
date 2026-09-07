@@ -24,6 +24,7 @@ include:
   - apps/media/configarr.yaml
   - apps/media/tracearr.yaml
   # Tools
+  - apps/tools/homepage.yaml
   - apps/tools/homarr.yaml
 
 networks:

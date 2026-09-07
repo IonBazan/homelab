@@ -1,0 +1,23 @@
+- resources:
+    label: System
+    cpu: true
+    memory: true
+    uptime: true
+    disk: /
+
+- openmeteo:
+    label: Singapore          # matches TZ=Asia/Singapore — change to your city/coords
+    latitude: 1.3521
+    longitude: 103.8198
+    units: metric
+    cache: 5
+
+- search:
+    provider: duckduckgo
+    target: _blank
+
+- datetime:
+    text_size: xl
+    format:
+      dateStyle: long
+      timeStyle: short

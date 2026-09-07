@@ -1,0 +1,18 @@
+- Docs:
+    - Homepage:
+        - abbr: HP
+          href: https://gethomepage.dev/
+    - Traefik:
+        - abbr: TR
+          href: https://doc.traefik.io/traefik/
+    - TRaSH Guides:
+        - abbr: TG
+          href: https://trash-guides.info/
+
+- Homelab:
+    - Repo:
+        - abbr: GH
+          href: https://github.com/IonBazan/homelab
+    - selfh.st Icons:
+        - abbr: SH
+          href: https://selfh.st/icons/

@@ -19,6 +19,14 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.prowlarr.loadbalancer.server.port: 9696
+      homepage.group: Media Management
+      homepage.name: Prowlarr
+      homepage.icon: sh-prowlarr.webp
+      homepage.href: https://prowlarr.${DOMAIN_NAME}
+      homepage.description: Indexer manager
+      homepage.widget.type: prowlarr
+      homepage.widget.url: http://prowlarr:9696
+      homepage.widget.key: ${PROWLARR_API_KEY:-}
 
 volumes:
   prowlarr_data:

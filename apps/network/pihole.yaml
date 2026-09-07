@@ -24,6 +24,15 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.pihole.loadbalancer.server.port: 80
+      homepage.group: Network
+      homepage.name: Pi-hole
+      homepage.icon: sh-pi-hole.webp
+      homepage.href: https://pihole.${DOMAIN_NAME}/admin
+      homepage.description: DNS ad blocker
+      homepage.widget.type: pihole
+      homepage.widget.url: http://pihole
+      homepage.widget.key: ${PIHOLE_PASSWORD:-}
+      homepage.widget.version: 6
 
 volumes:
   pihole_data:

@@ -35,6 +35,14 @@ services:
     labels:
       gangplank.forward: "${PLEX_PORT:-32400}/tcp"
       traefik.enable: false
+      homepage.group: Media
+      homepage.name: Plex
+      homepage.icon: sh-plex.webp
+      homepage.href: http://${PHYSICAL_SERVER_IP}:${PLEX_PORT:-32400}/web
+      homepage.description: Media server
+      homepage.widget.type: plex
+      homepage.widget.url: http://plex:32400
+      homepage.widget.key: ${PLEX_TOKEN:-}
 
 volumes:
   plex_data:

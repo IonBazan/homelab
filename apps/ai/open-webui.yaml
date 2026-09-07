@@ -17,6 +17,11 @@ services:
       traefik.enable: true
       traefik.http.routers.open-webui.rule: "Host(`ai.${DOMAIN_NAME}`)"
       traefik.http.services.open-webui.loadbalancer.server.port: 8080
+      homepage.group: AI
+      homepage.name: Open WebUI
+      homepage.icon: sh-open-webui.webp
+      homepage.href: https://ai.${DOMAIN_NAME}
+      homepage.description: LLM chat UI
 
 volumes:
   open_webui_data:

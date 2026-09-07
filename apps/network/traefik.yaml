@@ -49,6 +49,30 @@ services:
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: ^https://[^/]+/?$$
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
       traefik.http.middlewares.traefik-dashboard-auth.basicauth.users: ${TRAEFIK_DASHBOARD_AUTH:-}
+      # http->https redirect, scoped to ${DOMAIN_NAME} + its subdomains (replaces the
+      # blanket entrypoint redirect so foreign hosts stay on :80 for the catch-all).
+      traefik.http.routers.https-redirect.rule: HostRegexp(`^(.+\.)?${DOMAIN_NAME}$$`)
+      traefik.http.routers.https-redirect.entrypoints: web
+      traefik.http.routers.https-redirect.priority: 2
+      traefik.http.routers.https-redirect.service: noop@internal
+      traefik.http.routers.https-redirect.middlewares: https-redirect
+      traefik.http.middlewares.https-redirect.redirectscheme.scheme: https
+      traefik.http.middlewares.https-redirect.redirectscheme.permanent: true
+      # catch-all: 302 to TRAEFIK_CATCHALL_URL for any Host that is NOT ${DOMAIN_NAME}
+      # or a subdomain of it (foreign domains, *.local, bare IP, typos).
+      # Blank => empty rule => Traefik skips the router (one benign log line).
+      traefik.http.routers.catch-all.rule: ${TRAEFIK_CATCHALL_URL:+PathPrefix(`/`) && !HostRegexp(`^(.+\.)?${DOMAIN_NAME}$$`)}
+      traefik.http.routers.catch-all.priority: 1
+      traefik.http.routers.catch-all.entrypoints: web,websecure
+      traefik.http.routers.catch-all.service: noop@internal
+      traefik.http.routers.catch-all.middlewares: catch-all-redirect
+      traefik.http.middlewares.catch-all-redirect.redirectregex.regex: .*
+      traefik.http.middlewares.catch-all-redirect.redirectregex.replacement: ${TRAEFIK_CATCHALL_URL:-about:blank}
+      homepage.group: Network
+      homepage.name: Traefik
+      homepage.icon: sh-traefik.webp
+      homepage.href: https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
+      homepage.description: Reverse proxy
 
 volumes:
   traefik_certs:

@@ -3,13 +3,11 @@ global:
   sendAnonymousUsage: false
 
 entryPoints:
+  # No blanket http->https redirect here: it would upgrade foreign hosts before the
+  # catch-all can send them to TRAEFIK_CATCHALL_URL. The redirect is a router
+  # (`https-redirect`) scoped to ${DOMAIN_NAME}, defined on the traefik container.
   web:
     address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
   websecure:
     address: ":443"
     http:

@@ -24,6 +24,11 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.tracearr.loadbalancer.server.port: 3000
+      homepage.group: Media Management
+      homepage.name: Tracearr
+      homepage.icon: mdi-chart-timeline-variant
+      homepage.href: https://tracearr.${DOMAIN_NAME}
+      homepage.description: Playback analytics
 
   tracearr-db:
     image: timescale/timescaledb-ha:pg18.4-ts2.29.1

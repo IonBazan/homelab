@@ -17,6 +17,14 @@ services:
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     labels:
       traefik.enable: false
+      homepage.group: Media
+      homepage.name: Jellyfin
+      homepage.icon: sh-jellyfin.webp
+      homepage.href: http://${PHYSICAL_SERVER_IP}:8096
+      homepage.description: Media server
+      homepage.widget.type: jellyfin
+      homepage.widget.url: http://${PHYSICAL_SERVER_IP}:8096
+      homepage.widget.key: ${JELLYFIN_API_KEY:-}
 
 volumes:
   jellyfin_config:

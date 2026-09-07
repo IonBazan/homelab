@@ -17,6 +17,11 @@ services:
       TZ: ${TZ}
     labels:
       traefik.enable: false
+      homepage.group: Automation
+      homepage.name: Homebridge
+      homepage.icon: sh-homebridge.webp
+      homepage.href: http://${PHYSICAL_SERVER_IP}:8581
+      homepage.description: HomeKit bridge
 
 volumes:
   homebridge_data:

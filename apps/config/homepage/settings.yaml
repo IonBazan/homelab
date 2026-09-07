@@ -1,0 +1,25 @@
+title: Homelab
+headerStyle: clean
+statusStyle: dot
+hideVersion: true
+
+# Group order + layout. Group names must match the `homepage.group` container labels.
+layout:
+  Media:
+    style: row
+    columns: 2
+  Media Management:
+    style: row
+    columns: 4
+  AI:
+    style: row
+    columns: 2
+  Automation:
+    style: row
+    columns: 2
+  Network:
+    style: row
+    columns: 3
+  Tools:
+    style: row
+    columns: 2

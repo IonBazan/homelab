@@ -17,6 +17,11 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.homarr.loadbalancer.server.port: 7575
+      homepage.group: Tools
+      homepage.name: Homarr
+      homepage.icon: sh-homarr.webp
+      homepage.href: https://homarr.${DOMAIN_NAME}
+      homepage.description: Dashboard
 
 volumes:
   homarr_data:

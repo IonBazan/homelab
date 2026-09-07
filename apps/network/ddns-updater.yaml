@@ -20,3 +20,8 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.ddns-updater.loadbalancer.server.port: 8000
+      homepage.group: Network
+      homepage.name: DDNS Updater
+      homepage.icon: mdi-ip-network-outline
+      homepage.href: https://ddns-updater.${DOMAIN_NAME}
+      homepage.description: Dynamic DNS

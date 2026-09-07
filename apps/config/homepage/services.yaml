@@ -1,0 +1,3 @@
+# Services are discovered automatically from `homepage.*` labels on the
+# containers (see apps/<category>/*.yaml). Add anything without a container here,
+# following https://gethomepage.dev/configs/services/

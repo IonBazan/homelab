@@ -22,6 +22,14 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.sonarr.loadbalancer.server.port: 8989
+      homepage.group: Media Management
+      homepage.name: Sonarr
+      homepage.icon: sh-sonarr.webp
+      homepage.href: https://sonarr.${DOMAIN_NAME}
+      homepage.description: TV series
+      homepage.widget.type: sonarr
+      homepage.widget.url: http://sonarr:8989
+      homepage.widget.key: ${SONARR_API_KEY:-}
 
 volumes:
   sonarr_data:

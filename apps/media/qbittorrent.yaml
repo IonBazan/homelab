@@ -20,6 +20,16 @@ services:
     depends_on:
       gluetun:
         condition: service_healthy
+    labels:
+      homepage.group: Media Management
+      homepage.name: qBittorrent
+      homepage.icon: sh-qbittorrent.webp
+      homepage.href: https://qbittorrent.${DOMAIN_NAME}
+      homepage.description: Torrent client
+      homepage.widget.type: qbittorrent
+      homepage.widget.url: http://gluetun:${QBITTORRENT_PORT:-8081}
+      homepage.widget.username: ${QBITTORRENT_USERNAME:-admin}
+      homepage.widget.password: ${QBITTORRENT_PASSWORD:-}
 
 volumes:
   qbittorrent_data:

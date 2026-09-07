@@ -16,6 +16,11 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.ollama.loadbalancer.server.port: 11434
+      homepage.group: AI
+      homepage.name: Ollama
+      homepage.icon: sh-ollama.webp
+      homepage.href: https://ollama.${DOMAIN_NAME}
+      homepage.description: LLM runtime
 
 volumes:
   ollama_data:

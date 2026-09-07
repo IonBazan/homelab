@@ -8,6 +8,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ}
+      BAZARR__AUTH__APIKEY: ${BAZARR_API_KEY:-}
     volumes:
       - bazarr_data:/config
       - myMedia:/media
@@ -22,6 +23,14 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.bazarr.loadbalancer.server.port: 6767
+      homepage.group: Media Management
+      homepage.name: Bazarr
+      homepage.icon: sh-bazarr.webp
+      homepage.href: https://bazarr.${DOMAIN_NAME}
+      homepage.description: Subtitles
+      homepage.widget.type: bazarr
+      homepage.widget.url: http://bazarr:6767
+      homepage.widget.key: ${BAZARR_API_KEY:-}
 
 volumes:
   bazarr_data:
