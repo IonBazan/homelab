@@ -201,10 +201,16 @@ A feature-rich and open-source BitTorrent client with a web UI, running behind a
 
 Ships a seed [`apps/config/qbittorrent/qBittorrent.conf`](apps/config/qbittorrent/qBittorrent.conf)
 mounted over the live config so the container starts with the legal notice already accepted,
-downloads saved to `/media/Downloads`, reverse-proxy-friendly WebUI settings and LAN auth
-bypass. qBittorrent rewrites this file as you change settings in the UI. The torrent listen
-port is left unset so qBittorrent picks and persists one on first run — set it in the UI to
-match `TORRENT_PORT` if you need inbound connections through the VPN.
+downloads saved to `/media/Downloads` and reverse-proxy-friendly WebUI settings. qBittorrent
+rewrites this file as you change settings in the UI. The torrent listen port is left unset so
+qBittorrent picks and persists one on first run — set it in the UI to match `TORRENT_PORT` if
+you need inbound connections through the VPN.
+
+The WebUI **requires login on every path** (the subnet whitelist that used to wave through
+Docker/proxy traffic is disabled). On first start qBittorrent logs a temporary password
+(`docker compose logs qbittorrent | grep -i password`) — log in, set your own under
+*Options > Web UI*, then add that username/password to each *arr's qBittorrent download-client
+config.
 
 #### [Radarr](apps/media/radarr.yaml)
 A movie collection manager for Usenet and BitTorrent users, automating downloads and organization.
