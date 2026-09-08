@@ -88,7 +88,7 @@ that `setup-env.sh` already filled are marked _(auto)_.
 | `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
 | `COMPOSE_PROFILES` | service selection | Comma-separated (see [Profiles](#profiles)). `all` omits `traefik`, `pihole`, `ai` — add them explicitly, e.g. `all,traefik`. |
 | `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | _(auto)_ Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
-| `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | _(auto)_ Your LAN CIDR, e.g. `192.168.1.0/24`. |
+| `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | _(auto)_ Your LAN CIDR, e.g. `192.168.18.0/24`. |
 | `PUBLIC_DOMAIN` | Plex remote access | A public hostname tracking your home IP — see [Networking](#networking). |
 | `PLEX_CLAIM` | Plex first run | Fresh token from <https://www.plex.tv/claim> (valid ~4 min); can be blanked after first start. |
 | `TAILSCALE_TOKEN` | Tailscale | Tailscale admin → **Settings → Keys → Generate auth key**. Mark it *Reusable* + *Pre-approved* to skip manual route approval. |
@@ -140,12 +140,12 @@ docker compose run --rm configarr
 Create the records in Cloudflare pointing at the server's **LAN IP**, **DNS-only** (grey cloud — Cloudflare's proxy can't reach a private address, and the traffic should stay local anyway):
 
 ```
-homelab.example.com     A   192.168.1.10
-*.homelab.example.com   A   192.168.1.10
+homelab.example.com     A   192.168.18.10
+*.homelab.example.com   A   192.168.18.10
 ```
 
-- **At home** — the name resolves to `192.168.1.10` and you connect straight over the LAN.
-- **Away** — connect to your tailnet; the [Tailscale](#tailscale) container advertises `PHYSICAL_SERVER_NETWORK` as a subnet route, so `192.168.1.10` is reachable through it. The *same* public record works, so there is no split-horizon DNS and no local DNS server to run.
+- **At home** — the name resolves to `192.168.18.10` and you connect straight over the LAN.
+- **Away** — connect to your tailnet; the [Tailscale](#tailscale) container advertises `PHYSICAL_SERVER_NETWORK` as a subnet route, so `192.168.18.10` is reachable through it. The *same* public record works, so there is no split-horizon DNS and no local DNS server to run.
 
 ### TLS
 
