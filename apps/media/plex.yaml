@@ -19,7 +19,7 @@ services:
       TZ: ${TZ}
       VERSION: docker
       PLEX_CLAIM: ${PLEX_CLAIM}
-      ADVERTISE_IP: http://${PHYSICAL_SERVER_IP}:${PLEX_PORT:-32400},http://${PUBLIC_DOMAIN}:${PLEX_PUBLIC_PORT:-32400}
+      ADVERTISE_IP: http://${PHYSICAL_SERVER_IP:?set PHYSICAL_SERVER_IP in .env}:${PLEX_PORT:-32400},http://${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}:${PLEX_PUBLIC_PORT:-32400}
     devices:
       - /dev/dri:/dev/dri
     group_add:

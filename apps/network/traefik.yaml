@@ -16,7 +16,7 @@ services:
     environment:
       CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
       TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${CF_API_EMAIL}
-      DOMAIN_NAME: ${DOMAIN_NAME}
+      DOMAIN_NAME: ${DOMAIN_NAME:?set DOMAIN_NAME in .env, e.g. homelab.example.tld (see .env.example)}
       TZ: ${TZ}
     volumes:
       - ../config/traefik/rules:/etc/traefik/dynamic:ro
