@@ -25,11 +25,12 @@ services:
       homepage.group: Media Management
       homepage.name: Radarr
       homepage.icon: sh-radarr.webp
-      homepage.href: https://radarr.${DOMAIN_NAME}
+      homepage.href: //radarr.${DOMAIN_NAME}
       homepage.description: Movies
       homepage.widget.type: radarr
       homepage.widget.url: http://radarr:7878
       homepage.widget.key: ${RADARR_API_KEY:-}
+      homepage.widget.enableQueue: true
 
 volumes:
   radarr_data:

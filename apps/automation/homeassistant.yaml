@@ -19,7 +19,7 @@ services:
       homepage.group: Automation
       homepage.name: Home Assistant
       homepage.icon: sh-home-assistant.webp
-      homepage.href: https://homeassistant.${DOMAIN_NAME}
+      homepage.href: //homeassistant.${DOMAIN_NAME}
       homepage.description: Home automation
       homepage.widget.type: homeassistant
       homepage.widget.url: https://homeassistant.${DOMAIN_NAME}

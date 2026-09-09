@@ -23,5 +23,5 @@ services:
       homepage.group: Network
       homepage.name: DDNS Updater
       homepage.icon: mdi-ip-network-outline
-      homepage.href: https://ddns-updater.${DOMAIN_NAME}
+      homepage.href: //ddns-updater.${DOMAIN_NAME}
       homepage.description: Dynamic DNS

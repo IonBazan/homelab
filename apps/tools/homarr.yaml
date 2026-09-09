@@ -20,7 +20,7 @@ services:
       homepage.group: Tools
       homepage.name: Homarr
       homepage.icon: sh-homarr.webp
-      homepage.href: https://homarr.${DOMAIN_NAME}
+      homepage.href: //homarr.${DOMAIN_NAME}
       homepage.description: Dashboard
 
 volumes:

@@ -27,7 +27,7 @@ services:
       homepage.group: Network
       homepage.name: Pi-hole
       homepage.icon: sh-pi-hole.webp
-      homepage.href: https://pihole.${DOMAIN_NAME}/admin
+      homepage.href: //pihole.${DOMAIN_NAME}/admin
       homepage.description: DNS ad blocker
       homepage.widget.type: pihole
       homepage.widget.url: http://pihole

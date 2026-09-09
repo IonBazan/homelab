@@ -71,8 +71,10 @@ services:
       homepage.group: Network
       homepage.name: Traefik
       homepage.icon: sh-traefik.webp
-      homepage.href: https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
+      homepage.href: //${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
       homepage.description: Reverse proxy
+      homepage.widget.type: traefik
+      homepage.widget.url: http://traefik/dashboard
 
 volumes:
   traefik_certs:

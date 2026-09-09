@@ -20,7 +20,7 @@ services:
       homepage.group: AI
       homepage.name: Open WebUI
       homepage.icon: sh-open-webui.webp
-      homepage.href: https://ai.${DOMAIN_NAME}
+      homepage.href: //ai.${DOMAIN_NAME}
       homepage.description: LLM chat UI
 
 volumes:

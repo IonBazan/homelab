@@ -27,8 +27,15 @@ services:
       homepage.group: Media Management
       homepage.name: Tracearr
       homepage.icon: mdi-chart-timeline-variant
-      homepage.href: https://tracearr.${DOMAIN_NAME}
+      homepage.href: //tracearr.${DOMAIN_NAME}
       homepage.description: Playback analytics
+      homepage.widget.type: tracearr
+      homepage.widget.url: http://tracearr:3000
+      homepage.widget.key: ${TRACEARR_API_KEY:-}
+      homepage.widget.view: both
+      homepage.widget.enableUser: true
+      homepage.widget.showEpisodeNumber: true
+
 
   tracearr-db:
     image: timescale/timescaledb-ha:pg18.4-ts2.29.1
