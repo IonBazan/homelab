@@ -49,6 +49,14 @@ services:
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: ^https://[^/]+/?$$
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
       traefik.http.middlewares.traefik-dashboard-auth.basicauth.users: ${TRAEFIK_DASHBOARD_AUTH:-}
+      # internal-only API for the Homepage traefik widget: reachable as
+      # http://traefik from the docker network (no auth, no dashboard redirect).
+      # The IP allowlist keeps LAN clients from reaching it with a spoofed Host.
+      traefik.http.routers.traefik-api.rule: Host(`traefik`)
+      traefik.http.routers.traefik-api.service: api@internal
+      traefik.http.routers.traefik-api.entrypoints: web
+      traefik.http.routers.traefik-api.middlewares: traefik-api-internal
+      traefik.http.middlewares.traefik-api-internal.ipallowlist.sourcerange: 127.0.0.1/32,172.16.0.0/12
       # http->https redirect, scoped to ${DOMAIN_NAME} + its subdomains (replaces the
       # blanket entrypoint redirect so foreign hosts stay on :80 for the catch-all).
       traefik.http.routers.https-redirect.rule: HostRegexp(`^(.+\.)?${DOMAIN_NAME}$$`)
@@ -61,7 +69,7 @@ services:
       # catch-all: 302 to TRAEFIK_CATCHALL_URL for any Host that is NOT ${DOMAIN_NAME}
       # or a subdomain of it (foreign domains, *.local, bare IP, typos).
       # Blank => empty rule => Traefik skips the router (one benign log line).
-      traefik.http.routers.catch-all.rule: ${TRAEFIK_CATCHALL_URL:+PathPrefix(`/`) && !HostRegexp(`^(.+\.)?${DOMAIN_NAME}$$`)}
+      traefik.http.routers.catch-all.rule: ${TRAEFIK_CATCHALL_URL:+PathPrefix(`/`) && !HostRegexp(`^(.+\.)?${DOMAIN_NAME}$$`) && !Host(`traefik`)}
       traefik.http.routers.catch-all.priority: 1
       traefik.http.routers.catch-all.entrypoints: web,websecure
       traefik.http.routers.catch-all.service: noop@internal
@@ -74,7 +82,7 @@ services:
       homepage.href: //${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
       homepage.description: Reverse proxy
       homepage.widget.type: traefik
-      homepage.widget.url: http://traefik/dashboard
+      homepage.widget.url: http://traefik
 
 volumes:
   traefik_certs:

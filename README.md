@@ -379,6 +379,11 @@ scoped to `${DOMAIN_NAME}` so those foreign hosts reach the redirect over plain 
 cert warning. Unknown subdomains *of* `${DOMAIN_NAME}` just 404 — they're "yours", so no
 external redirect.
 
+The bare Host `traefik` is exempt from the catch-all: a `web`-only router maps it to
+`api@internal` so Homepage's Traefik widget can read the API at `http://traefik` from the
+Docker network. An IP allowlist (`127.0.0.1/32,172.16.0.0/12`) keeps LAN clients from reaching
+it with a spoofed `Host` header, so it stays unauthenticated without exposing the API.
+
 The shared `middlewares-secure-headers` middleware (nosniff, frame-options, referrer/permissions
 policy) is applied to every proxied route via the `websecure` entrypoint; edit
 [`apps/config/traefik/rules/middlewares.yml`](apps/config/traefik/rules/middlewares.yml) to change it.
