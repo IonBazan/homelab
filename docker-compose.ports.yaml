@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+#
+# Optional overlay: publishes the web UIs on the host. Enable with COMPOSE_FILE
+# in .env. Ports that cannot go behind Traefik stay in the app files.
+services:
+  # AI
+  ollama:
+    ports:
+      - ${OLLAMA_PORT:-11434}:11434/tcp
+
+  open-webui:
+    ports:
+      - ${OPEN_WEBUI_PORT:-3000}:8080/tcp
+
+  # Network
+  ddns-updater:
+    ports:
+      - ${DDNS_UPDATER_PORT:-8001}:8000/tcp
+
+  pihole:
+    ports:
+      - ${PIHOLE_WEB_PORT:-81}:80/tcp
+
+  # qBittorrent shares gluetun's network namespace, so its WebUI is published here
+  gluetun:
+    ports:
+      - ${QBITTORRENT_PORT:-8081}:${QBITTORRENT_PORT:-8081}/tcp
+
+  # Media
+  jellyfin:
+    ports:
+      - ${JELLYFIN_PORT:-8096}:8096/tcp
+      - ${JELLYFIN_HTTPS_PORT:-8920}:8920/tcp
+
+  prowlarr:
+    ports:
+      - ${PROWLARR_PORT:-9696}:9696/tcp
+
+  radarr:
+    ports:
+      - ${RADARR_PORT:-7878}:7878/tcp
+
+  sonarr:
+    ports:
+      - ${SONARR_PORT:-8989}:8989/tcp
+
+  bazarr:
+    ports:
+      - ${BAZARR_PORT:-6767}:6767/tcp
+
+  tracearr:
+    ports:
+      - ${TRACEARR_PORT:-3001}:3000/tcp
+
+  # Tools
+  homarr:
+    ports:
+      - ${HOMARR_PORT:-7575}:7575/tcp

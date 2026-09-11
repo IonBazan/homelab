@@ -3,8 +3,6 @@ services:
   ddns-updater:
     image: qmcgaw/ddns-updater
     container_name: ddns-updater
-    ports:
-      - ${DDNS_UPDATER_PORT:-8001}:8000/tcp
     volumes:
       - ../config/ddns-updater:/updater/data
     profiles: ["network", "all"]

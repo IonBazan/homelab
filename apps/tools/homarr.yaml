@@ -6,8 +6,6 @@ services:
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik
-    ports:
-      - ${HOMARR_PORT:-7575}:7575/tcp
     volumes:
       - homarr_data:/appdata
       - /var/run/docker.sock:/var/run/docker.sock:ro

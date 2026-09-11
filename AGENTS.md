@@ -15,6 +15,9 @@ diff against their neighbours.
 - `docker-compose.yaml` — the entry point. Holds nothing but `include:` (one line per app,
   grouped by category with a `# Category` comment), the shared `networks:`, and the `myMedia`
   volume that binds `${MEDIA_DIR}` into the *arr/media containers.
+- `docker-compose.ports.yaml` — optional overlay holding nothing but a `ports:` block per
+  service, in the same category order. Loaded only when `COMPOSE_FILE` names it, so the
+  default stack publishes no web UI on the host.
 - `apps/<category>/<app>.yaml` — one file per app. Categories: `ai`, `automation`, `media`,
   `network`, `tools`. Each file is self-contained: its services, its named volumes and, if it
   needs one, its own private network.
@@ -56,8 +59,11 @@ profiles it plausibly belongs to, always including `all`:
   and publish their ports on the gluetun service instead of their own.
 - An app that ships its own database or cache declares a private network inside its own file and
   keeps the supporting containers off `traefik`.
-- Publish ports as `${APP_PORT:-<default>}:<container-port>/tcp`. Check the default is free —
-  Open-WebUI already holds 3000, Homarr 7575, and the *arr apps their usual ports.
+- A web UI's host port goes in `docker-compose.ports.yaml`, not in the app file, as
+  `${APP_PORT:-<default>}:<container-port>/tcp`. Check the default is free — Open-WebUI
+  already holds 3000, Homarr 7575, and the *arr apps their usual ports. Keep a port in the app
+  file only when it cannot work behind Traefik anyway (Traefik's own 80/443, Pi-hole's DNS,
+  Plex, the torrent port).
 
 ### Labels
 
@@ -79,7 +85,8 @@ profiles it plausibly belongs to, always including `all`:
 ## Adding an app
 
 1. Write `apps/<category>/<app>.yaml` following the conventions above.
-2. Add the `include:` line to `docker-compose.yaml` under the right category.
+2. Add the `include:` line to `docker-compose.yaml` under the right category, and the
+   `ports:` block to `docker-compose.ports.yaml` if the app has a web UI.
 3. Add any new variables to `.env.example`. If a variable is a random secret (API key,
    encryption/JWT secret, password) or derivable from the host (an IP, CIDR, id, timezone),
    also wire it into `setup-env.sh` — the `GEN` array for random values, the `fill_detected`
@@ -97,7 +104,12 @@ docker compose config --quiet
 ```
 
 That renders every included file with the current `.env` and is the only check available — it
-catches schema errors, bad references and unresolved variables. Run it after any YAML change.
+catches schema errors, bad references and unresolved variables. Run it after any YAML change,
+and once more with the ports overlay:
+
+```bash
+COMPOSE_FILE=docker-compose.yaml:docker-compose.ports.yaml docker compose config --quiet
+```
 
 Do not run `docker compose up`, `down`, `pull` or `restart` unless explicitly asked. The stack
 is live, and pulling or recreating a container is a production action, not a verification step.

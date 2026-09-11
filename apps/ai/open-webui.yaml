@@ -3,8 +3,6 @@ services:
   open-webui:
     image: ghcr.io/open-webui/open-webui
     container_name: open-webui
-    ports:
-      - 3000:8080/tcp
     volumes:
       - open_webui_data:/app/backend/data
     profiles: ["ai", "all"]

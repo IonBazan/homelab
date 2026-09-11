@@ -12,8 +12,6 @@ services:
     volumes:
       - bazarr_data:/config
       - myMedia:/media
-    ports:
-      - ${BAZARR_PORT:-6767}:6767/tcp
     depends_on:
       - radarr
       - sonarr

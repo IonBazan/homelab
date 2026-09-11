@@ -12,7 +12,6 @@ services:
       - vpn
       - traefik
     ports:
-      - ${QBITTORRENT_PORT:-8081}:${QBITTORRENT_PORT:-8081}/tcp
       - ${TORRENT_PORT:-6881}:${TORRENT_PORT:-6881}/tcp
       - ${TORRENT_PORT:-6881}:${TORRENT_PORT:-6881}/udp
     sysctls:

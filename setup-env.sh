@@ -211,5 +211,5 @@ done
 [ "$any" -eq 0 ] && echo "  (nothing - all set)"
 
 echo
-echo "Review the defaults the script can't guess: DOMAIN_NAME  MEDIA_DIR  COMPOSE_PROFILES"
+echo "Review the defaults the script can't guess: DOMAIN_NAME  MEDIA_DIR  COMPOSE_PROFILES  COMPOSE_FILE"
 echo "Also edit .env.gluetun: uncomment one provider block and fill the credentials."

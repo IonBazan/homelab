@@ -12,8 +12,6 @@ services:
     volumes:
       - sonarr_data:/config
       - myMedia:/media
-    ports:
-      - ${SONARR_PORT:-8989}:8989/tcp
     depends_on:
       - prowlarr
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}

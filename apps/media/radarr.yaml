@@ -12,8 +12,6 @@ services:
     volumes:
       - radarr_data:/config
       - myMedia:/media
-    ports:
-      - ${RADARR_PORT:-7878}:7878/tcp
     depends_on:
       - prowlarr
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}

@@ -13,7 +13,7 @@ Feel free to fork it and use it on your own machine and customize it if needed.
 ### Simplicity
 
 Each service resides in their own YAML file and is included in the main `docker-compose.yaml` for better isolation and maintainability.
-While Traefik is currently enabled, accessing services via their exposed ports is preferred over custom subdomains with SSL, although it is possible to use them too.
+Host ports live in a single optional overlay, `docker-compose.ports.yaml`, so the stack can run either behind Traefik alone or with every UI on the LAN — see [Host ports](#host-ports).
 
 ### Ease of customization
 
@@ -36,6 +36,27 @@ Most ports are configurable via _optional_ environment variables. Check out indi
 Tokens, subdomains and other configuration can be found in `.env.example`.
 
 You can also customize default restart policy using `UNIVERSAL_RESTART_POLICY` variable (defaults to `unless-stopped`).
+
+#### Host ports
+
+By default the stack publishes no web UI on the host: the apps are reachable through Traefik at
+`https://<container>.${DOMAIN_NAME}` (profile `traefik`) or over Tailscale, and nothing else
+listens on the LAN. `docker-compose.ports.yaml` is an optional overlay that adds a `ports:`
+block to each of those services and puts them back on `http://<server ip>:<port>`. Load it by
+uncommenting `COMPOSE_FILE` in `.env`:
+
+```dotenv
+COMPOSE_FILE=docker-compose.yaml:docker-compose.ports.yaml
+```
+
+Run without Traefik and you want the overlay, otherwise there is no way in. Run with Traefik
+and you can leave it off, which keeps the whole stack behind one TLS front door. Container to
+container traffic uses the docker networks either way, so Traefik routing, the Homepage widgets
+and Configarr work in both modes.
+
+A few ports cannot be served through Traefik and are always published, overlay or not:
+Traefik's own `80`/`443`, Pi-hole's DNS on `53`, Plex's `32400` plus its discovery ports, and
+gluetun's `TORRENT_PORT`.
 
 ### Portability
 
@@ -87,6 +108,7 @@ that `setup-env.sh` already filled are marked _(auto)_.
 | `PUID` / `PGID` | media apps | _(auto)_ `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
 | `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
 | `COMPOSE_PROFILES` | service selection | Comma-separated (see [Profiles](#profiles)). `all` omits `traefik`, `pihole`, `ai` — add them explicitly, e.g. `all,traefik`. |
+| `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host — see [Host ports](#host-ports). Unset = Traefik/Tailscale only. |
 | `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | _(auto)_ Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
 | `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | _(auto)_ Your LAN CIDR, e.g. `192.168.18.0/24`. |
 | `PUBLIC_DOMAIN` | Plex remote access | A public hostname tracking your home IP — see [Networking](#networking). |
@@ -169,12 +191,12 @@ Not part of routing — just a network-wide ad blocker (profile `pihole`, not in
 
 #### [Ollama](apps/ai/ollama.yaml)
 A local AI model runner for LLMs, providing an API for running and managing models on your own hardware.
-- **Ports:** 11434:11434/tcp
+- **Ports:** 11434:11434/tcp (OLLAMA_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `ai`, `all`
 
 #### [Open-WebUI](apps/ai/open-webui.yaml)
 A web-based user interface for interacting with local LLMs, designed to work with Ollama and similar backends.
-- **Ports:** 3000:8080/tcp
+- **Ports:** 3000:8080/tcp (OPEN_WEBUI_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `ai`, `all`
 
 ### Automation
@@ -193,12 +215,12 @@ Bridges non-HomeKit devices to Apple HomeKit, enabling control of a wide range o
 
 #### [Jellyfin](apps/media/jellyfin.yaml)
 A free software media system that puts you in control of managing and streaming your media.
-- **Ports:** 8096:8096/tcp, 8920:8920/tcp
+- **Ports:** 8096:8096/tcp, 8920:8920/tcp (JELLYFIN_PORT / JELLYFIN_HTTPS_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `media`, `all`
 
 #### [Plex](apps/media/plex.yaml)
 A popular media server for streaming your personal media collection to any device.
-- **Ports:** 32400:32400/tcp (configurable via PLEX_PORT), 8324:8324/tcp, 32469:32469/tcp, 1900:1900/udp, 32410:32410/udp, 32412:32412/udp, 32413:32413/udp, 32414:32414/udp
+- **Ports:** 32400:32400/tcp (configurable via PLEX_PORT), 8324:8324/tcp, 32469:32469/tcp, 1900:1900/udp, 32410:32410/udp, 32412:32412/udp, 32413:32413/udp, 32414:32414/udp — always published, Plex clients connect directly
 - **Profiles:** `media`, `all`
 
 Passes the host's `/dev/dri` through for Intel QuickSync / VAAPI hardware transcoding. Set
@@ -209,12 +231,12 @@ defaults to `/tmp`) instead of the config volume.
 
 #### [Prowlarr](apps/media/prowlarr.yaml)
 An indexer manager/proxy for *arr applications, supporting Usenet and BitTorrent indexers.
-- **Ports:** 9696:9696/tcp (configurable via PROWLARR_PORT)
+- **Ports:** 9696:9696/tcp (PROWLARR_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `media`, `arrs`, `all`
 
 #### [qBittorrent](apps/media/qbittorrent.yaml)
 A feature-rich and open-source BitTorrent client with a web UI, running behind a VPN for privacy.
-- **Ports:** published on the `gluetun` container — `${QBITTORRENT_PORT:-8081}/tcp` (WebUI), `${TORRENT_PORT:-6881}/tcp+udp` (torrents)
+- **Ports:** published on the `gluetun` container — `${QBITTORRENT_PORT:-8081}/tcp` (WebUI, [overlay only](#host-ports)), `${TORRENT_PORT:-6881}/tcp+udp` (torrents, always published)
 - **Profiles:** `vpn`, `all`
 - **Traefik:** its router is defined on the `gluetun` service (qBittorrent shares gluetun's network namespace).
 
@@ -242,12 +264,12 @@ path** (the subnet whitelist that used to wave through Docker/proxy traffic is d
 
 #### [Radarr](apps/media/radarr.yaml)
 A movie collection manager for Usenet and BitTorrent users, automating downloads and organization.
-- **Ports:** 7878:7878/tcp (configurable via RADARR_PORT)
+- **Ports:** 7878:7878/tcp (RADARR_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `media`, `arrs`, `all`
 
 #### [Bazarr](apps/media/bazarr.yaml)
 A companion app for Radarr and Sonarr that manages and downloads subtitles for movies and TV series.
-- **Ports:** 6767:6767/tcp (configurable via BAZARR_PORT)
+- **Ports:** 6767:6767/tcp (BAZARR_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `media`, `arrs`, `all`
 
 Set `BAZARR_API_KEY` in `.env` (`openssl rand -hex 16`) to pin the API key via the
@@ -255,14 +277,14 @@ Set `BAZARR_API_KEY` in `.env` (`openssl rand -hex 16`) to pin the API key via t
 
 #### [Tracearr](apps/media/tracearr.yaml)
 A self-hosted playback tracker and analytics dashboard for Plex, Jellyfin and Emby. Ships with its own TimescaleDB and Redis containers on a private `tracearr` network.
-- **Ports:** 3001:3000/tcp (configurable via TRACEARR_PORT)
+- **Ports:** 3001:3000/tcp (TRACEARR_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `media`, `all`
 
 Requires `TRACEARR_JWT_SECRET` and `TRACEARR_COOKIE_SECRET` in `.env` (`openssl rand -hex 32` each).
 
 #### [Sonarr](apps/media/sonarr.yaml)
 A TV series collection manager for Usenet and BitTorrent users, automating downloads and organization.
-- **Ports:** 8989:8989/tcp (configurable via SONARR_PORT)
+- **Ports:** 8989:8989/tcp (SONARR_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `media`, `arrs`, `all`
 
 Set `SONARR_API_KEY` in `.env` (`openssl rand -hex 16`) to pin the API key via the
@@ -297,7 +319,7 @@ docker compose run --rm configarr
 
 #### [DDNS Updater](apps/network/ddns-updater.yaml)
 Keeps your Dynamic DNS records up to date with your current public IP address.
-- **Ports:** 8001:8000/tcp (configurable via DDNS_UPDATER_PORT)
+- **Ports:** 8001:8000/tcp (DDNS_UPDATER_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** `all`
 
 #### [Gangplank](apps/network/gangplank.yaml)
@@ -307,7 +329,7 @@ A simple Docker port forwarder and helper for exposing services.
 
 #### [Gluetun](apps/network/gluetun.yaml)
 VPN client container to route traffic of other containers (qBittorrent) through a secure VPN tunnel.
-- **Ports:** 8081/tcp (qBittorrent WebUI, configurable via `QBITTORRENT_PORT`), 6881/tcp+udp (torrents, configurable via `TORRENT_PORT`)
+- **Ports:** 8081/tcp (qBittorrent WebUI, `QBITTORRENT_PORT`, [overlay only](#host-ports)), 6881/tcp+udp (torrents, `TORRENT_PORT`, always published)
 - **Profiles:** `vpn`, `all`
 
 VPN provider config is kept separate from the main `.env` so credentials are never in the compose files.
@@ -331,7 +353,7 @@ docker compose up -d --force-recreate gluetun qbittorrent
 Optional network-wide ad blocker and DNS sinkhole. Not required for service routing — see
 [Networking](#networking). When enabled it also publishes `address=/${DOMAIN_NAME}/${PHYSICAL_SERVER_IP}`,
 a local alternative to the Cloudflare `*.${DOMAIN_NAME}` records.
-- **Ports:** 53:53/tcp, 53:53/udp, 81:80/tcp
+- **Ports:** 53:53/tcp, 53:53/udp (always published), 81:80/tcp (admin UI, PIHOLE_WEB_PORT, [overlay only](#host-ports))
 - **Profiles:** `pihole` (not in `all`)
 
 #### [Tailscale](apps/network/tailscale.yaml)
@@ -412,7 +434,7 @@ link-only: Sonarr / Radarr / Prowlarr (`*_API_KEY`), Pi-hole (`PIHOLE_PASSWORD`)
 
 #### [Homarr](apps/tools/homarr.yaml)
 An alternative self-hosted dashboard with Docker integration, configured through its own UI.
-- **Ports:** 7575:7575/tcp (configurable via HOMARR_PORT)
+- **Ports:** 7575:7575/tcp (HOMARR_PORT) (overlay only, see [Host ports](#host-ports))
 - **Profiles:** none set — always runs
 - Proxied by Traefik at `homarr.${DOMAIN_NAME}`. Redundant with Homepage — drop one.
 

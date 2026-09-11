@@ -11,8 +11,6 @@ services:
       PROWLARR__AUTH__APIKEY: ${PROWLARR_API_KEY:-}
     volumes:
       - prowlarr_data:/config
-    ports:
-      - ${PROWLARR_PORT:-9696}:9696/tcp
     networks:
       - traefik
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
