@@ -359,7 +359,7 @@ a local alternative to the Cloudflare `*.${DOMAIN_NAME}` records.
 #### [Tailscale](apps/network/tailscale.yaml)
 Zero-config VPN to connect your devices and networks securely using WireGuard.
 - **Ports:** host
-- **Profiles:** (not specified)
+- **Profiles:** `tailscale` (not in `all`)
 
 Runs as a subnet router: `TS_ROUTES` advertises `PHYSICAL_SERVER_NETWORK` so remote tailnet
 devices reach LAN hosts (including `PHYSICAL_SERVER_IP`) by their local IP through this node.

@@ -3,6 +3,7 @@ services:
   tailscale:
     image: tailscale/tailscale:stable
     container_name: tailscale
+    profiles: ["tailscale"]
     cap_add:
       - NET_ADMIN
       - NET_RAW
