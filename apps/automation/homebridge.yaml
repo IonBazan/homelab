@@ -16,11 +16,12 @@ services:
     environment:
       TZ: ${TZ}
     labels:
-      traefik.enable: false
+      traefik.enable: true
+      traefik.http.services.homebridge.loadbalancer.server.url: http://host.docker.internal:8581
       homepage.group: Automation
       homepage.name: Homebridge
       homepage.icon: sh-homebridge.webp
-      homepage.href: http://${PHYSICAL_SERVER_IP}:8581
+      homepage.href: //homebridge.${DOMAIN_NAME} 
       homepage.description: HomeKit bridge
 
 volumes:
