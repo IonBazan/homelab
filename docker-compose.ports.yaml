@@ -56,3 +56,7 @@ services:
   homarr:
     ports:
       - ${HOMARR_PORT:-7575}:7575/tcp
+
+  wud:
+    ports:
+      - ${WUD_PORT:-3002}:3000/tcp

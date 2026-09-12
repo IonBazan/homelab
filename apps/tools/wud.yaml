@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  wud:
+    image: getwud/wud
+    container_name: wud
+    profiles: ["tools", "all"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - wud_data:/store
+    environment:
+      TZ: ${TZ}
+      WUD_AUTH_ADMIN_USER: ${ADMIN_USER:-admin}
+      WUD_AUTH_ADMIN_PASSWORD: ${WUD_PASSWORD:-}
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: true
+      traefik.http.services.wud.loadbalancer.server.port: 3000
+      homepage.group: Tools
+      homepage.name: What's up Docker
+      homepage.icon: sh-wud.webp
+      homepage.href: //wud.${DOMAIN_NAME}
+      homepage.description: Container updates
+      homepage.widget.type: whatsupdocker
+      homepage.widget.url: http://wud:3000
+      homepage.widget.username: ${ADMIN_USER:-admin}
+      homepage.widget.password: ${WUD_PASSWORD:-}
+
+volumes:
+  wud_data:

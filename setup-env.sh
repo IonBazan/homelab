@@ -154,6 +154,7 @@ GEN=(
   "QBITTORRENT_PASSWORD          rand_pass"
   "PIHOLE_PASSWORD               rand_pass"
   "TRACEARR_DB_PASSWORD          rand_pass"
+  "WUD_PASSWORD                  rand_pass"
 )
 
 echo

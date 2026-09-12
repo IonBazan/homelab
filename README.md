@@ -30,7 +30,7 @@ set through the `COMPOSE_PROFILES` environment variable. The supported profiles 
 - `automation` for Home Assistant and Homebridge
 - `vpn` for Gluetun and qBittorrent
 - `ai` for Ollama and Open-WebUI
-- `tools` for Homepage
+- `tools` for Homepage and What's up Docker
 - `network` for DDNS Updater
 - `all` for everything above, plus Gangplank
 
@@ -132,6 +132,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | _(auto)_ `openssl rand -hex 32` each |
 | `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | _(auto)_ `openssl rand -hex 16` each. Leave blank to let each app self-generate, in which case Configarr will not run. |
 | `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every `up -d` and wires the Homepage widget, described under [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank means you set it in the UI. |
+| `WUD_PASSWORD` | What's up Docker | _(auto)_ Admin password for the UI and the Homepage widget. WUD will not start while it is blank. The username is `ADMIN_USER`. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
 
@@ -482,13 +483,28 @@ through the `sh-<name>.webp` prefix, with `mdi-…` for the few without one.
 Service widgets pull stats when a credential is present in `.env`, otherwise the tile is link-only.
 The credentials are Sonarr, Radarr and Prowlarr (`*_API_KEY`), Pi-hole (`PIHOLE_PASSWORD`), Plex
 (`PLEX_TOKEN`), Jellyfin (`JELLYFIN_API_KEY`), Bazarr (`BAZARR_API_KEY`), Home Assistant
-(`HOMEASSISTANT_TOKEN`) and qBittorrent (`QBITTORRENT_USERNAME`, `QBITTORRENT_PASSWORD`).
+(`HOMEASSISTANT_TOKEN`), qBittorrent (`QBITTORRENT_USERNAME`, `QBITTORRENT_PASSWORD`) and What's
+up Docker (`ADMIN_USER`, `WUD_PASSWORD`).
 
 #### [Homarr](apps/tools/homarr.yaml)
 Alternative self-hosted dashboard with Docker integration, configured through its own UI.
 - **Ports:** 7575:7575/tcp (HOMARR_PORT), overlay only, see [Host ports](#host-ports)
 - **Profiles:** none set, so it always runs
 - Proxied by Traefik at `homarr.${DOMAIN_NAME}`. It overlaps with Homepage, so pick one.
+
+#### [What's up Docker](apps/tools/wud.yaml)
+Watches every running container and reports which images have a newer version upstream.
+- **Ports:** 3002:3000/tcp (WUD_PORT), overlay only, see [Host ports](#host-ports)
+- **Profiles:** `tools`, `all`
+- Proxied by Traefik at `https://wud.${DOMAIN_NAME}`.
+
+No per-container labels are needed. The Docker watcher picks up every container on the socket by
+default (`WATCHBYDEFAULT` is true) and checks hourly. Add `wud.watch: false` to a container to skip
+it, or `wud.tag.include` to tell WUD which tag pattern counts as an update for images that do not
+use plain `latest`.
+
+Set `WUD_PASSWORD` in `.env`, since WUD refuses to start without an admin password. The username
+comes from `ADMIN_USER`, which defaults to `admin`. The same pair feeds the Homepage widget.
 
 ## Contributing
 
