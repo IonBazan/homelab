@@ -15,6 +15,8 @@ services:
       TS_AUTHKEY: ${TAILSCALE_TOKEN}
       TS_ACCEPT_DNS: 'true'
       TS_ROUTES: ${PHYSICAL_SERVER_NETWORK}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_AUTH_ONCE: true
     network_mode: host
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
 
