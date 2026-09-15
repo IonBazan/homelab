@@ -345,9 +345,9 @@ profiles into Sonarr and Radarr, driven by [`apps/config/configarr/config.yml`](
 - **Ports:** none (run-once container)
 - **Profiles:** `media`, `arrs`, `all`
 
-Requires `SONARR_API_KEY` and `RADARR_API_KEY` in `.env`. It reads them through `!env` and reaches
-each app over the `traefik` network. It also manages the root folders, pointing Sonarr at
-`/media/Shows` and Radarr at `/media/Movies` (the `Shows` and `Movies` directories under
+Requires `SONARR_API_KEY`, `RADARR_API_KEY` and `PROWLARR_API_KEY` in `.env`. It reads them through
+`!env` and reaches each app over the `traefik` network. It also manages the root folders, pointing
+Sonarr at `/media/Shows` and Radarr at `/media/Movies` (the `Shows` and `Movies` directories under
 `MEDIA_DIR`).
 
 It adds the **qBittorrent download client** to both apps as well (`download_clients` in `config.yml`,
@@ -357,6 +357,13 @@ points at `gluetun:8081` because qBittorrent shares gluetun's network namespace.
 `update_password: true` re-pushes the password on each run, so it tracks the same `.env` value the
 qBittorrent seeder uses. Set `QBITTORRENT_PASSWORD` or run `setup-env.sh`, otherwise the client is
 created with a blank password and will not connect.
+
+In **Prowlarr** it registers Sonarr and Radarr as applications on `fullSync`, adds the same
+qBittorrent download client, and then triggers *Sync App Indexers* so every indexer you have in
+Prowlarr is pushed into both apps. Indexers themselves are not managed: add them in the Prowlarr UI
+and re-run Configarr, or let Prowlarr's own sync pick them up. The applications are deliberately
+left untagged, because a tagged application only receives indexers carrying the same tag. Nothing is
+deleted, so anything you added by hand in Prowlarr stays.
 
 It runs once and exits on `docker compose up -d`. Re-run it at any time with:
 
