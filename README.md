@@ -32,10 +32,11 @@ set through the `COMPOSE_PROFILES` environment variable. The supported profiles 
 - `ai` for Ollama and Open-WebUI
 - `tools` for Homepage and What's up Docker
 - `network` for DDNS Updater
+- `homarr` for Homarr on its own, kept apart from `tools` because it is the heaviest service here
 - `all` for everything above, plus Gangplank
 
 Three profiles stay out of `all` because they change how the host behaves, so you enable them
-explicitly: `traefik`, `pihole` and `tailscale`. Homarr has no profile at all and always runs.
+explicitly: `traefik`, `pihole` and `tailscale`.
 
 #### Environment variables
 
@@ -496,8 +497,16 @@ up Docker (`ADMIN_USER`, `WUD_PASSWORD`).
 #### [Homarr](apps/tools/homarr.yaml)
 Alternative self-hosted dashboard with Docker integration, configured through its own UI.
 - **Ports:** 7575:7575/tcp (HOMARR_PORT), overlay only, see [Host ports](#host-ports)
-- **Profiles:** none set, so it always runs
+- **Profiles:** `homarr`, `all`
 - Proxied by Traefik at `homarr.${DOMAIN_NAME}`. It overlaps with Homepage, so pick one.
+
+It uses noticeably more RAM than the rest of the tools, so it has a profile to itself rather than
+sitting under `tools`. It still runs with the default `all`. To leave it out, list the profiles you
+want instead:
+
+```dotenv
+COMPOSE_PROFILES="media,vpn,tools,network,automation,ai"
+```
 
 #### [What's up Docker](apps/tools/wud.yaml)
 Watches every running container and reports which images have a newer version upstream.

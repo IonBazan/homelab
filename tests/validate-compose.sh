@@ -35,6 +35,9 @@ check absent all       pihole
 check present pihole   pihole
 check absent all       tailscale
 check present tailscale tailscale
+check present all      homarr
+check present homarr   homarr
+check absent  tools    homarr
 
 check present media    plex
 check present arrs     radarr

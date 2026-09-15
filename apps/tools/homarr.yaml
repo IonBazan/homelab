@@ -3,6 +3,7 @@ services:
   homarr:
     container_name: homarr
     image: ghcr.io/homarr-labs/homarr:latest
+    profiles: ["homarr", "all"]
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik
