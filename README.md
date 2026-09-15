@@ -25,7 +25,7 @@ the LAN. See [Host ports](#host-ports).
 Choose which services to deploy with [Docker Compose profiles](https://docs.docker.com/compose/how-tos/profiles/),
 set through the `COMPOSE_PROFILES` environment variable. The supported profiles are:
 
-- `media` for media servers (Jellyfin, Plex, Tracearr) and everything under `arrs`
+- `media` for media servers (Jellyfin, Plex, Tracearr, Seerr) and everything under `arrs`
 - `arrs` for Sonarr, Radarr, Prowlarr, Bazarr and Configarr
 - `automation` for Home Assistant and Homebridge
 - `vpn` for Gluetun and qBittorrent
@@ -331,6 +331,17 @@ TimescaleDB and Redis containers on a private `tracearr` network.
 
 Requires `TRACEARR_JWT_SECRET` and `TRACEARR_COOKIE_SECRET` in `.env` (`openssl rand -hex 32` each).
 
+#### [Seerr](apps/media/seerr.yaml)
+Request manager for Plex and Jellyfin. Users search for a film or show, and approved requests are
+handed to Radarr and Sonarr to download. The merged successor to Overseerr and Jellyseerr.
+- **Ports:** 5055:5055/tcp (SEERR_PORT), overlay only, see [Host ports](#host-ports)
+- **Profiles:** `media`, `all`
+
+Everything is configured in its own setup wizard on first visit: pick Plex or Jellyfin, sign in, then
+add Radarr and Sonarr under *Settings > Services*. Point them at `http://radarr:7878` and
+`http://sonarr:8989` with the API keys from `.env`, since all three share the `traefik` network.
+Set `SEERR_API_KEY` in `.env` from *Settings > General > API Key* to light up the Homepage widget.
+
 #### [Sonarr](apps/media/sonarr.yaml)
 TV series collection manager for Usenet and BitTorrent, automating downloads and organization.
 - **Ports:** 8989:8989/tcp (SONARR_PORT), overlay only, see [Host ports](#host-ports)
@@ -490,9 +501,9 @@ through the `sh-<name>.webp` prefix, with `mdi-…` for the few without one.
 
 Service widgets pull stats when a credential is present in `.env`, otherwise the tile is link-only.
 The credentials are Sonarr, Radarr and Prowlarr (`*_API_KEY`), Pi-hole (`PIHOLE_PASSWORD`), Plex
-(`PLEX_TOKEN`), Jellyfin (`JELLYFIN_API_KEY`), Bazarr (`BAZARR_API_KEY`), Home Assistant
-(`HOMEASSISTANT_TOKEN`), qBittorrent (`QBITTORRENT_USERNAME`, `QBITTORRENT_PASSWORD`) and What's
-up Docker (`ADMIN_USER`, `WUD_PASSWORD`).
+(`PLEX_TOKEN`), Jellyfin (`JELLYFIN_API_KEY`), Bazarr (`BAZARR_API_KEY`), Seerr (`SEERR_API_KEY`),
+Home Assistant (`HOMEASSISTANT_TOKEN`), qBittorrent (`QBITTORRENT_USERNAME`,
+`QBITTORRENT_PASSWORD`) and What's up Docker (`ADMIN_USER`, `WUD_PASSWORD`).
 
 #### [Homarr](apps/tools/homarr.yaml)
 Alternative self-hosted dashboard with Docker integration, configured through its own UI.

@@ -4,6 +4,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 export DOMAIN_NAME="test.tld"
+export TZ="Asia/Singapore"
+export PUID="1000"
+export PGID="1000"
 export PHYSICAL_SERVER_IP="127.0.0.1"
 export PUBLIC_DOMAIN="test.tld"
 export MEDIA_DIR="/tmp/media"
@@ -40,6 +43,8 @@ check present homarr   homarr
 check absent  tools    homarr
 
 check present media    plex
+check present media    seerr
+check absent  arrs     seerr
 check present arrs     radarr
 check absent  arrs     plex
 check absent  media    homepage

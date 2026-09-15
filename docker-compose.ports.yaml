@@ -52,6 +52,10 @@ services:
     ports:
       - ${TRACEARR_PORT:-3001}:3000/tcp
 
+  seerr:
+    ports:
+      - ${SEERR_PORT:-5055}:5055/tcp
+
   # Tools
   homarr:
     ports:

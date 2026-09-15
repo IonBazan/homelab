@@ -23,6 +23,7 @@ include:
   - apps/media/bazarr.yaml
   - apps/media/configarr.yaml
   - apps/media/tracearr.yaml
+  - apps/media/seerr.yaml
   # Tools
   - apps/tools/homepage.yaml
   - apps/tools/homarr.yaml
