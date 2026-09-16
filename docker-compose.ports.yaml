@@ -61,6 +61,10 @@ services:
     ports:
       - ${HOMARR_PORT:-7575}:7575/tcp
 
+  glances:
+    ports:
+      - ${GLANCES_PORT:-61208}:61208/tcp
+
   wud:
     ports:
       - ${WUD_PORT:-3002}:3000/tcp

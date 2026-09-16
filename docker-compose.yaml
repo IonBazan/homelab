@@ -27,6 +27,7 @@ include:
   # Tools
   - apps/tools/homepage.yaml
   - apps/tools/homarr.yaml
+  - apps/tools/glances.yaml
   - apps/tools/wud.yaml
 
 networks:

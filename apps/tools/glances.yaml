@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  glances:
+    image: nicolargo/glances:latest-full
+    container_name: glances
+    profiles: ["tools", "all"]
+    pid: host
+    environment:
+      TZ: ${TZ}
+      GLANCES_OPT: -w
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: true
+      traefik.http.services.glances.loadbalancer.server.port: 61208
+      homepage.group: Tools
+      homepage.name: Glances
+      homepage.icon: sh-glances.webp
+      homepage.href: //glances.${DOMAIN_NAME}
+      homepage.description: Host monitoring
+      homepage.widget.type: glances
+      homepage.widget.url: http://glances:61208
+      homepage.widget.version: 4
+      homepage.widget.metric: info

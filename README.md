@@ -30,7 +30,7 @@ set through the `COMPOSE_PROFILES` environment variable. The supported profiles 
 - `automation` for Home Assistant and Homebridge
 - `vpn` for Gluetun and qBittorrent
 - `ai` for Ollama and Open-WebUI
-- `tools` for Homepage and What's up Docker
+- `tools` for Homepage, Glances and What's up Docker
 - `network` for DDNS Updater
 - `homarr` for Homarr on its own, kept apart from `tools` because it is the heaviest service here
 - `all` for everything above, plus Gangplank
@@ -518,6 +518,17 @@ want instead:
 ```dotenv
 COMPOSE_PROFILES="media,vpn,tools,network,automation,ai"
 ```
+
+#### [Glances](apps/tools/glances.yaml)
+Live view of the host's CPU, memory, disks, processes and containers, with a Homepage widget
+summarising it on the dashboard.
+- **Ports:** 61208:61208/tcp (GLANCES_PORT), overlay only, see [Host ports](#host-ports)
+- **Profiles:** `tools`, `all`
+- Proxied by Traefik at `https://glances.${DOMAIN_NAME}`.
+
+It runs in the host PID namespace and reads the Docker socket, so CPU, memory, disk and process
+figures are the host's. Network counters are the container's own, since it stays on the `traefik`
+network. There is no authentication in front of the web UI, so keep it off the public internet.
 
 #### [What's up Docker](apps/tools/wud.yaml)
 Watches every running container and reports which images have a newer version upstream.
