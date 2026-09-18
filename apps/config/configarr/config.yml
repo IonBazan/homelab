@@ -45,7 +45,7 @@ sonarr:
         - <<: *qbittorrent
           fields:
             <<: *qbittorrent-fields
-            tv_category: tv
+            tv_category: tv-sonarr
 
 radarr:
   movies:
@@ -71,7 +71,7 @@ radarr:
         - <<: *qbittorrent
           fields:
             <<: *qbittorrent-fields
-            movie_category: movies
+            movie_category: radarr
 
 prowlarr:
   main:

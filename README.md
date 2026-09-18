@@ -365,7 +365,7 @@ Sonarr at `/media/Shows` and Radarr at `/media/Movies` (the `Shows` and `Movies`
 It adds the **qBittorrent download client** to both apps as well (`download_clients` in `config.yml`,
 shared through a YAML anchor, with `CONFIGARR_ENABLE_MERGE=true` set on the container). The client
 points at `gluetun:8081` because qBittorrent shares gluetun's network namespace. It uses categories
-`tv` and `movies`, and authenticates with `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD`.
+`tv-sonarr` and `radarr`, and authenticates with `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD`.
 `update_password: true` re-pushes the password on each run, so it tracks the same `.env` value the
 qBittorrent seeder uses. Set `QBITTORRENT_PASSWORD` or run `setup-env.sh`, otherwise the client is
 created with a blank password and will not connect.
