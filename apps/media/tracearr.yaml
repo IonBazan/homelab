@@ -3,7 +3,7 @@ services:
   tracearr:
     image: ghcr.io/connorgallopo/tracearr:latest
     container_name: tracearr
-    profiles: ["media", "all"]
+    profiles: ["tracearr", "media", "basic", "default", "full"]
     environment:
       TZ: ${TZ}
       DATABASE_URL: postgres://tracearr:${TRACEARR_DB_PASSWORD:-tracearr}@tracearr-db:5432/tracearr
@@ -38,7 +38,7 @@ services:
   tracearr-db:
     image: timescale/timescaledb-ha:pg18
     container_name: tracearr-db
-    profiles: ["media", "all"]
+    profiles: ["tracearr", "media", "basic", "default", "full"]
     command: postgres -c timescaledb.license=timescale -c timescaledb.telemetry_level=off
     environment:
       POSTGRES_USER: tracearr
@@ -58,7 +58,7 @@ services:
   tracearr-redis:
     image: redis:alpine
     container_name: tracearr-redis
-    profiles: ["media", "all"]
+    profiles: ["tracearr", "media", "basic", "default", "full"]
     volumes:
       - tracearr_redis_data:/data
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}

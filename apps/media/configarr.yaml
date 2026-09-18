@@ -3,7 +3,7 @@ services:
   configarr:
     image: ghcr.io/raydak-labs/configarr:latest
     container_name: configarr
-    profiles: ["media", "arrs", "all"]
+    profiles: ["configarr", "arrs", "media", "basic", "default", "full"]
     environment:
       TZ: ${TZ}
       SONARR_API_KEY: ${SONARR_API_KEY:-}

@@ -3,7 +3,7 @@ services:
   radarr:
     container_name: radarr
     image: linuxserver/radarr
-    profiles: ["media", "arrs", "all"]
+    profiles: ["radarr", "configarr", "arrs", "media", "basic", "default", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -13,7 +13,9 @@ services:
       - radarr_data:/config
       - myMedia:/media
     depends_on:
-      - prowlarr
+      prowlarr:
+        condition: service_started
+        required: false
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik

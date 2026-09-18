@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v2
+    container_name: pocket-id
+    profiles: ["pocket-id", "auth", "full"]
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      APP_URL: https://id.${DOMAIN_NAME}
+      TRUST_PROXY: true
+      ENCRYPTION_KEY: ${POCKET_ID_ENCRYPTION_KEY}
+    volumes:
+      - pocket_id_data:/app/data
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: true
+      traefik.http.routers.pocket-id.rule: Host(`id.${DOMAIN_NAME}`)
+      traefik.http.services.pocket-id.loadbalancer.server.port: 1411
+      homepage.group: Auth
+      homepage.name: Pocket ID
+      homepage.icon: sh-pocket-id.webp
+      homepage.href: //id.${DOMAIN_NAME}
+      homepage.description: Passkey sign-in (OIDC)
+
+volumes:
+  pocket_id_data:

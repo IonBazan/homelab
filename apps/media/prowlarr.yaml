@@ -3,7 +3,7 @@ services:
   prowlarr:
     image: linuxserver/prowlarr
     container_name: prowlarr
-    profiles: ["media", "arrs", "all"]
+    profiles: ["prowlarr", "configarr", "arrs", "media", "basic", "default", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

@@ -18,7 +18,7 @@ diff against their neighbours.
 - `docker-compose.ports.yaml` — optional overlay holding nothing but a `ports:` block per
   service, in the same category order. Loaded only when `COMPOSE_FILE` names it, so the
   default stack publishes no web UI on the host.
-- `apps/<category>/<app>.yaml` — one file per app. Categories: `ai`, `automation`, `media`,
+- `apps/<category>/<app>.yaml` — one file per app. Categories: `ai`, `auth`, `automation`, `media`,
   `network`, `tools`. Each file is self-contained: its services, its named volumes and, if it
   needs one, its own private network.
 - `apps/config/` — configuration mounted into containers (traefik static config and dynamic
@@ -45,12 +45,24 @@ diff against their neighbours.
 
 ### Profiles
 
-`COMPOSE_PROFILES` in `.env` selects what runs; the default is `all`. Give every service the
-profiles it plausibly belongs to, always including `all`:
+`COMPOSE_PROFILES` in `.env` selects what runs; the default is `default`. Compose profiles do not
+nest, so every service lists, in order: its app profile (the file name, shared by every service in
+that file), its category profiles, then the groups it belongs to:
 
-- `media` / `arrs` — media servers, and the *arr apps that manage them
+- `basic` — the everyday stack: media, arrs, vpn, automation, tools, network, Gangplank
+- `default` — `basic` plus traefik
+- `full` — every service, always included
+- `media` / `arrs` / `plex` / `jellyfin` — media servers, and the *arr apps that manage them
 - `vpn` — anything that must sit behind gluetun
-- `ai`, `automation`, `tools`, `traefik`, `pihole` — the remaining groupings
+- `ai`, `auth`, `automation`, `homarr`, `network`, `pihole`, `tailscale`, `tools`, `traefik` — the
+  remaining groupings
+
+Every app profile must start on its own. Mark a `depends_on` entry `required: false` when the app
+works without it; when it cannot (qBittorrent needs gluetun's network), add the app's profile to the
+dependency instead.
+
+A new service goes in `basic` and `default` too, unless it is heavy, needs extra setup, or changes
+how the host behaves; those stay in `full` only.
 
 ### Networking
 

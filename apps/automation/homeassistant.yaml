@@ -7,7 +7,7 @@ services:
       - hass_data:/config
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
-    profiles: ["automation", "all"]
+    profiles: ["homeassistant", "automation", "basic", "default", "full"]
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     privileged: true
     network_mode: host

@@ -3,7 +3,7 @@ services:
   homarr:
     container_name: homarr
     image: ghcr.io/homarr-labs/homarr:latest
-    profiles: ["homarr", "all"]
+    profiles: ["homarr", "full"]
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik
@@ -13,6 +13,11 @@ services:
     environment:
       TZ: ${TZ}
       SECRET_ENCRYPTION_KEY: ${HOMARR_SECRET_ENCRYPTION_KEY}
+      AUTH_PROVIDERS: ${HOMARR_OIDC_CLIENT_ID:+oidc,}credentials
+      AUTH_OIDC_ISSUER: https://id.${DOMAIN_NAME}
+      AUTH_OIDC_CLIENT_ID: ${HOMARR_OIDC_CLIENT_ID:-}
+      AUTH_OIDC_CLIENT_SECRET: ${HOMARR_OIDC_CLIENT_SECRET:-}
+      AUTH_OIDC_CLIENT_NAME: Pocket ID
     labels:
       traefik.enable: true
       traefik.http.services.homarr.loadbalancer.server.port: 7575

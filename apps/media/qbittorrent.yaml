@@ -3,7 +3,7 @@ services:
   qbittorrent:
     image: linuxserver/qbittorrent
     container_name: qbittorrent
-    profiles: ["vpn", "all"]
+    profiles: ["qbittorrent", "vpn", "basic", "default", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -41,7 +41,7 @@ services:
   qbittorrent-config:
     image: python:3.13-alpine
     container_name: qbittorrent-config
-    profiles: ["vpn", "all"]
+    profiles: ["qbittorrent", "vpn", "basic", "default", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

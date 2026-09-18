@@ -17,6 +17,9 @@ layout:
   Automation:
     style: row
     columns: 2
+  Auth:
+    style: row
+    columns: 2
   Network:
     style: row
     columns: 3

@@ -3,7 +3,7 @@ services:
   ollama:
     image: ollama/ollama
     container_name: ollama
-    profiles: ["ai", "all"]
+    profiles: ["ollama", "ai", "full"]
     environment:
       OLLAMA_ORIGINS: "*"
     volumes:

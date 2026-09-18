@@ -5,7 +5,7 @@ services:
     container_name: gangplank
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    profiles: ["all"]
+    profiles: ["gangplank", "basic", "default", "full"]
     command: forward
     environment:
       TZ: ${TZ}

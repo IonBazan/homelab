@@ -3,6 +3,8 @@ include:
   # AI
   - apps/ai/ollama.yaml
   - apps/ai/open-webui.yaml
+  # Auth
+  - apps/auth/pocket-id.yaml
   # Automation
   - apps/automation/homeassistant.yaml
   - apps/automation/homebridge.yaml

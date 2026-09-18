@@ -3,7 +3,7 @@ services:
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
     container_name: homepage
-    profiles: ["tools", "all"]
+    profiles: ["homepage", "tools", "basic", "default", "full"]
     environment:
       HOMEPAGE_ALLOWED_HOSTS: home.${DOMAIN_NAME},${DOMAIN_NAME}
     volumes:

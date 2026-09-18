@@ -3,7 +3,7 @@ services:
   bazarr:
     image: lscr.io/linuxserver/bazarr
     container_name: bazarr
-    profiles: ["media", "arrs", "all"]
+    profiles: ["bazarr", "arrs", "media", "basic", "default", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -13,8 +13,12 @@ services:
       - bazarr_data:/config
       - myMedia:/media
     depends_on:
-      - radarr
-      - sonarr
+      radarr:
+        condition: service_started
+        required: false
+      sonarr:
+        condition: service_started
+        required: false
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik

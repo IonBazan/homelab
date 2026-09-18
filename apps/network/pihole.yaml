@@ -4,7 +4,7 @@ services:
     image: pihole/pihole
     container_name: pihole
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
-    profiles: [pihole]
+    profiles: ["pihole", "full"]
     ports:
       - 53:53/tcp
       - 53:53/udp

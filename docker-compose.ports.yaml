@@ -12,6 +12,11 @@ services:
     ports:
       - ${OPEN_WEBUI_PORT:-3000}:8080/tcp
 
+  # Auth
+  pocket-id:
+    ports:
+      - ${POCKET_ID_PORT:-1411}:1411/tcp
+
   # Network
   ddns-updater:
     ports:

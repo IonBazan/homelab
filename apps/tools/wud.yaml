@@ -3,7 +3,7 @@ services:
   wud:
     image: getwud/wud
     container_name: wud
-    profiles: ["tools", "all"]
+    profiles: ["wud", "tools", "basic", "default", "full"]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - wud_data:/store
@@ -11,6 +11,10 @@ services:
       TZ: ${TZ}
       WUD_AUTH_ADMIN_USER: ${ADMIN_USER:-admin}
       WUD_AUTH_ADMIN_PASSWORD: ${WUD_PASSWORD:-}
+      WUD_PUBLIC_URL: https://wud.${DOMAIN_NAME}
+      WUD_AUTH_OIDC_POCKETID_DISCOVERY: ${WUD_OIDC_CLIENT_ID:+https://id.${DOMAIN_NAME}/.well-known/openid-configuration}
+      WUD_AUTH_OIDC_POCKETID_CLIENTID: ${WUD_OIDC_CLIENT_ID:-}
+      WUD_AUTH_OIDC_POCKETID_CLIENTSECRET: ${WUD_OIDC_CLIENT_SECRET:-}
     networks:
       - traefik
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}

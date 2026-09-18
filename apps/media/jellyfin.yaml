@@ -3,7 +3,7 @@ services:
   jellyfin:
     image: jellyfin/jellyfin
     container_name: jellyfin
-    profiles: ["media", "all"]
+    profiles: ["jellyfin", "media", "basic", "default", "full"]
     environment:
       TZ: ${TZ}
     volumes:

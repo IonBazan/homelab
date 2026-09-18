@@ -3,7 +3,7 @@ services:
   gluetun:
     image: qmcgaw/gluetun
     container_name: gluetun
-    profiles: ["vpn", "all"]
+    profiles: ["gluetun", "qbittorrent", "vpn", "basic", "default", "full"]
     cap_add:
       - NET_ADMIN
     env_file:

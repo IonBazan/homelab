@@ -3,7 +3,7 @@ services:
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
     container_name: seerr
-    profiles: ["media", "all"]
+    profiles: ["seerr", "arrs", "media", "basic", "default", "full"]
     init: true
     security_opt:
       - no-new-privileges
@@ -12,8 +12,12 @@ services:
     volumes:
       - seerr_data:/app/config
     depends_on:
-      - radarr
-      - sonarr
+      radarr:
+        condition: service_started
+        required: false
+      sonarr:
+        condition: service_started
+        required: false
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik

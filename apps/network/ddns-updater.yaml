@@ -5,7 +5,7 @@ services:
     container_name: ddns-updater
     volumes:
       - ../config/ddns-updater:/updater/data
-    profiles: ["network", "all"]
+    profiles: ["ddns-updater", "network", "basic", "default", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

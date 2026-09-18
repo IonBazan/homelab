@@ -3,7 +3,7 @@ services:
   sonarr:
     container_name: sonarr
     image: linuxserver/sonarr
-    profiles: ["media", "arrs", "all"]
+    profiles: ["sonarr", "configarr", "arrs", "media", "basic", "default", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
@@ -13,7 +13,9 @@ services:
       - sonarr_data:/config
       - myMedia:/media
     depends_on:
-      - prowlarr
+      prowlarr:
+        condition: service_started
+        required: false
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     networks:
       - traefik

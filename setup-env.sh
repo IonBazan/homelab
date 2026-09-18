@@ -147,6 +147,7 @@ GEN=(
   "HOMARR_SECRET_ENCRYPTION_KEY  rand_hex 32"
   "TRACEARR_JWT_SECRET           rand_hex 32"
   "TRACEARR_COOKIE_SECRET        rand_hex 32"
+  "POCKET_ID_ENCRYPTION_KEY      rand_hex 32"
   "SONARR_API_KEY                rand_hex 16"
   "RADARR_API_KEY                rand_hex 16"
   "PROWLARR_API_KEY              rand_hex 16"

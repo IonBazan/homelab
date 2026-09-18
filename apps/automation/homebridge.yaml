@@ -5,7 +5,7 @@ services:
     image: homebridge/homebridge:latest
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     network_mode: host
-    profiles: ["automation", "all"]
+    profiles: ["homebridge", "automation", "basic", "default", "full"]
     volumes:
       - homebridge_data:/homebridge
     logging:

@@ -3,7 +3,7 @@ services:
   glances:
     image: nicolargo/glances:latest-full
     container_name: glances
-    profiles: ["tools", "all"]
+    profiles: ["glances", "tools", "basic", "default", "full"]
     pid: host
     environment:
       TZ: ${TZ}
