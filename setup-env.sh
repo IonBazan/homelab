@@ -129,6 +129,11 @@ fill_detected() {
   fi
 }
 
+if ! env_has_value COMPOSE_PROFILES "$ENV_FILE"; then
+  set_env COMPOSE_PROFILES default "$ENV_FILE"
+  echo "COMPOSE_PROFILES was empty, set to default"
+fi
+
 echo
 echo "Host:"
 ipcidr=$(detect_ip_cidr || true)

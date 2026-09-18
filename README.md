@@ -72,12 +72,12 @@ There are three kinds of profile:
 
 | Group | Starts | Use it when |
 | --- | --- | --- |
-| `basic` | Media servers, the *arr apps, qBittorrent behind the VPN, home automation, Homepage, Glances, What's up Docker, DDNS Updater and Gangplank | You reach the apps by host port or over Tailscale, without Traefik |
+| `basic` | Media servers, the *arr apps, qBittorrent behind the VPN, home automation, Homepage, Glances, What's up Docker and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
 | `default` | Everything in `basic`, plus Traefik | The usual setup, and the value `.env.example` ships with |
-| `full` | Every service in the repo, including AI, Pocket ID, Homarr, Pi-hole and Tailscale | The host is dedicated to this stack and you want all of it |
+| `full` | Every service in the repo, including AI, Pocket ID, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
 
-The AI stack, Pocket ID and Homarr are heavy or need extra setup, and Pi-hole and Tailscale change
-how the host behaves, so only `full` or their own profiles start them.
+The AI stack, Pocket ID and Homarr are heavy or need extra setup, and Pi-hole, Tailscale and
+Gangplank change how the host or router behaves, so only `full` or their own profiles start them.
 
 ### Dependencies
 
@@ -120,10 +120,12 @@ cd homelab
 ```
 
 `setup-env.sh` creates `.env` from `.env.example` and generates every secret that can be random (the
-`*_API_KEY`s, `HOMARR_SECRET_ENCRYPTION_KEY`, the two `TRACEARR_*` secrets, and the qBittorrent,
-Pi-hole and Tracearr database passwords). It detects host values from the default-route interface
-(`PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`, `PUID`, `PGID`), scaffolds `.env.gluetun`
-from the template, and prints the handful of tokens you still have to fetch yourself. It never
+`*_API_KEY`s, `HOMARR_SECRET_ENCRYPTION_KEY`, `POCKET_ID_ENCRYPTION_KEY`, the two `TRACEARR_*`
+secrets, and the qBittorrent, Pi-hole and Tracearr database passwords). It sets a blank
+`COMPOSE_PROFILES` to `default`, since an empty value starts nothing. It detects host values from
+the default-route interface (`PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`, `PUID`,
+`PGID`), scaffolds `.env.gluetun` from the template, and prints the handful of tokens you still
+have to fetch yourself. It never
 overwrites a value you have edited (host values overwrite only the shipped placeholder), so it is
 safe to re-run.
 
@@ -149,7 +151,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `TZ` | all | _(auto)_ IANA name, e.g. `Europe/Warsaw` ([list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). |
 | `PUID` / `PGID` | media apps | _(auto)_ `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
 | `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
-| `COMPOSE_PROFILES` | service selection | Comma-separated (see [Profiles](#profiles)). `default` is `basic` plus Traefik. Add single profiles to a group, e.g. `default,ai`. |
+| `COMPOSE_PROFILES` | service selection | _(auto if blank)_ Comma-separated (see [Profiles](#profiles)). `default` is `basic` plus Traefik. Add single profiles to a group, e.g. `default,ai`. |
 | `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host, described under [Host ports](#host-ports). Unset means Traefik and Tailscale only. |
 | `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | _(auto)_ Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
 | `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | _(auto)_ Your LAN CIDR, e.g. `192.168.18.0/24`. |
@@ -246,9 +248,9 @@ Use this only for services that need a real public endpoint, such as Plex remote
 `PUBLIC_DOMAIN` to a hostname that follows your home IP and keep DDNS Updater (profile `network`)
 running. Providers go in `apps/config/ddns-updater/config.json`
 ([format](https://github.com/qdm12/ddns-updater#configuration)). Forward the port on your router
-(Plex needs `32400/tcp`), or let Gangplank automate UPnP forwards from the `gangplank.forward`
-labels. Plex advertises both its LAN and `PUBLIC_DOMAIN` endpoints through `ADVERTISE_IP`.
-Everything else stays private to the LAN and the tailnet.
+(Plex needs `32400/tcp`), or let Gangplank (profile `gangplank`) automate UPnP forwards from the
+`gangplank.forward` labels. Plex advertises both its LAN and `PUBLIC_DOMAIN` endpoints through
+`ADVERTISE_IP`. Everything else stays private to the LAN and the tailnet.
 
 ### Pi-hole (optional)
 
@@ -449,7 +451,7 @@ Keeps your Dynamic DNS records up to date with your current public IP address.
 #### [Gangplank](apps/network/gangplank.yaml)
 Docker port forwarder that opens UPnP forwards for the ports you label.
 - **Ports:** host
-- **Profiles:** `gangplank`, `basic`, `default`, `full`
+- **Profiles:** `gangplank`, `full`
 
 #### [Gluetun](apps/network/gluetun.yaml)
 VPN client container that routes the traffic of other containers, currently qBittorrent, through a
