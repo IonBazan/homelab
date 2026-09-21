@@ -17,6 +17,8 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.prowlarr.loadbalancer.server.port: 9696
+      tinyauth.apps.prowlarr.config.domain: prowlarr.${DOMAIN_NAME}
+      tinyauth.apps.prowlarr.path.allow: ^/(api|ping|\d+/(api|download))
       homepage.group: Media Management
       homepage.name: Prowlarr
       homepage.icon: sh-prowlarr.webp

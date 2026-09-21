@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  tinyauth:
+    image: ghcr.io/tinyauthapp/tinyauth:v5
+    container_name: tinyauth
+    profiles: ["tinyauth", "auth", "full"]
+    environment:
+      TINYAUTH_APPURL: https://tinyauth.${DOMAIN_NAME}
+      TINYAUTH_AUTH_SECURECOOKIE: true
+      TINYAUTH_OAUTH_AUTOREDIRECT: pocketid
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_NAME: Pocket ID
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTID: ${TINYAUTH_OIDC_CLIENT_ID:-}
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTSECRET: ${TINYAUTH_OIDC_CLIENT_SECRET:-}
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_AUTHURL: https://id.${DOMAIN_NAME}/authorize
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_TOKENURL: https://id.${DOMAIN_NAME}/api/oidc/token
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_USERINFOURL: https://id.${DOMAIN_NAME}/api/oidc/userinfo
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_REDIRECTURL: https://tinyauth.${DOMAIN_NAME}/api/oauth/callback/pocketid
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_SCOPES: openid,email,profile,groups
+    volumes:
+      - tinyauth_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      pocket-id:
+        condition: service_started
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    labels:
+      traefik.enable: true
+      traefik.http.routers.tinyauth.rule: Host(`tinyauth.${DOMAIN_NAME}`)
+      traefik.http.routers.tinyauth.service: tinyauth
+      traefik.http.services.tinyauth.loadbalancer.server.port: 3000
+      traefik.http.middlewares.tinyauth.forwardauth.address: http://tinyauth:3000/api/auth/traefik
+      traefik.http.middlewares.tinyauth.forwardauth.trustForwardHeader: false
+      # These routers outrank each app's own router and exist only while tinyauth
+      # is running, so without this profile the apps are served as before.
+      traefik.http.routers.sonarr-tinyauth.rule: Host(`sonarr.${DOMAIN_NAME}`)
+      traefik.http.routers.sonarr-tinyauth.priority: 1000
+      traefik.http.routers.sonarr-tinyauth.service: sonarr
+      traefik.http.routers.sonarr-tinyauth.middlewares: tinyauth
+      traefik.http.routers.radarr-tinyauth.rule: Host(`radarr.${DOMAIN_NAME}`)
+      traefik.http.routers.radarr-tinyauth.priority: 1000
+      traefik.http.routers.radarr-tinyauth.service: radarr
+      traefik.http.routers.radarr-tinyauth.middlewares: tinyauth
+      traefik.http.routers.prowlarr-tinyauth.rule: Host(`prowlarr.${DOMAIN_NAME}`)
+      traefik.http.routers.prowlarr-tinyauth.priority: 1000
+      traefik.http.routers.prowlarr-tinyauth.service: prowlarr
+      traefik.http.routers.prowlarr-tinyauth.middlewares: tinyauth
+      traefik.http.routers.bazarr-tinyauth.rule: Host(`bazarr.${DOMAIN_NAME}`)
+      traefik.http.routers.bazarr-tinyauth.priority: 1000
+      traefik.http.routers.bazarr-tinyauth.service: bazarr
+      traefik.http.routers.bazarr-tinyauth.middlewares: tinyauth
+      homepage.group: Auth
+      homepage.name: Tinyauth
+      homepage.icon: sh-tinyauth.webp
+      homepage.href: //tinyauth.${DOMAIN_NAME}
+      homepage.description: Login in front of the *arr apps
+
+volumes:
+  tinyauth_data:

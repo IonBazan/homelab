@@ -22,6 +22,8 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.sonarr.loadbalancer.server.port: 8989
+      tinyauth.apps.sonarr.config.domain: sonarr.${DOMAIN_NAME}
+      tinyauth.apps.sonarr.path.allow: ^/(api|feed|ping)
       homepage.group: Media Management
       homepage.name: Sonarr
       homepage.icon: sh-sonarr.webp

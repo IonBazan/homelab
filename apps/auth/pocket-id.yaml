@@ -3,7 +3,7 @@ services:
   pocket-id:
     image: ghcr.io/pocket-id/pocket-id:v2
     container_name: pocket-id
-    profiles: ["pocket-id", "auth", "full"]
+    profiles: ["pocket-id", "tinyauth", "auth", "full"]
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

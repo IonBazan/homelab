@@ -22,6 +22,8 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.radarr.loadbalancer.server.port: 7878
+      tinyauth.apps.radarr.config.domain: radarr.${DOMAIN_NAME}
+      tinyauth.apps.radarr.path.allow: ^/(api|feed|ping)
       homepage.group: Media Management
       homepage.name: Radarr
       homepage.icon: sh-radarr.webp

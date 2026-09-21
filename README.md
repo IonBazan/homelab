@@ -74,16 +74,18 @@ There are three kinds of profile:
 | --- | --- | --- |
 | `basic` | Media servers, the *arr apps, qBittorrent behind the VPN, home automation, Homepage, Glances, What's up Docker and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
 | `default` | Everything in `basic`, plus Traefik | The usual setup, and the value `.env.example` ships with |
-| `full` | Every service in the repo, including AI, Pocket ID, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
+| `full` | Every service in the repo, including AI, Pocket ID, Tinyauth, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
 
-The AI stack, Pocket ID and Homarr are heavy or need extra setup, and Pi-hole, Tailscale and
-Gangplank change how the host or router behaves, so only `full` or their own profiles start them.
+The AI stack, Pocket ID, Tinyauth and Homarr are heavy or need extra setup, and Pi-hole, Tailscale
+and Gangplank change how the host or router behaves, so only `full` or their own profiles start them.
 
 ### Dependencies
 
 Some app profiles start what the app cannot run without. qBittorrent needs Gluetun's network, so
-`qbittorrent` starts Gluetun too, and `configarr` starts Sonarr, Radarr and Prowlarr, which it
-configures. Other links between apps are optional: `sonarr` on its own starts only Sonarr.
+`qbittorrent` starts Gluetun too, `tinyauth` starts Pocket ID, its only login, and `configarr`
+starts Sonarr, Radarr and Prowlarr, which it configures. The `auth` category starts Traefik, since
+Pocket ID and Tinyauth are only reachable through it. Other links between apps are optional:
+`sonarr` on its own starts only Sonarr.
 
 ### Examples
 
@@ -165,6 +167,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | _(auto)_ `openssl rand -hex 32` each |
 | `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | _(auto)_ `openssl rand -hex 16` each. Leave blank to let each app self-generate, in which case Configarr will not run. |
 | `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every `up -d` and wires the Homepage widget, described under [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank means you set it in the UI. |
+| `TINYAUTH_OIDC_CLIENT_ID` / `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | Only with the `auth` or `tinyauth` profile. An OIDC client in Pocket ID, described under [Tinyauth](#tinyauthappsauthtinyauthyaml). |
 | `WUD_PASSWORD` | What's up Docker | _(auto)_ Admin password for the UI and the Homepage widget. WUD will not start while it is blank. The username is `ADMIN_USER`. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
@@ -277,7 +280,7 @@ Web interface for local LLMs, built to work with Ollama and similar backends.
 #### [Pocket ID](apps/auth/pocket-id.yaml)
 OpenID Connect provider that signs users in with passkeys, for apps that support OIDC login.
 - **Ports:** 1411:1411/tcp (POCKET_ID_PORT), overlay only, see [Host ports](#host-ports)
-- **Profiles:** `pocket-id`, `auth`, `full` (needs `traefik`)
+- **Profiles:** `pocket-id`, `auth`, `full` (`auth` starts Traefik, `pocket-id` alone needs `traefik`)
 - Proxied by Traefik at `https://id.${DOMAIN_NAME}`.
 
 `APP_URL` is fixed to the Traefik hostname because passkeys only work over HTTPS on the domain
@@ -297,6 +300,56 @@ out when Pocket ID is down.
 
 Open-WebUI links a Pocket ID login to an existing account with the same email. Homarr creates a
 separate user for it.
+
+Tinyauth works differently. Pocket ID is its only login, and its setup is described under
+[Tinyauth](#tinyauthappsauthtinyauthyaml).
+
+#### [Tinyauth](apps/auth/tinyauth.yaml)
+Forward-auth login page that Traefik puts in front of Sonarr, Radarr, Prowlarr and Bazarr.
+- **Ports:** none, reachable only through Traefik
+- **Profiles:** `tinyauth`, `auth`, `full` (starts Pocket ID; `auth` starts Traefik, `tinyauth` alone needs `traefik`)
+- Proxied by Traefik at `https://tinyauth.${DOMAIN_NAME}`.
+
+Pocket ID is the only way to sign in. Tinyauth has no local users and sends browsers straight to
+Pocket ID, so while Pocket ID is down nobody can reach the app UIs through Traefik.
+
+To set it up:
+
+1. Add `auth` to `COMPOSE_PROFILES`, or use `full`. Both start Traefik, Pocket ID and Tinyauth. If
+   you add only `tinyauth`, Traefik has to come from another profile such as `default`.
+2. Start Pocket ID with `docker compose up -d pocket-id` and create the first admin account at
+   `https://id.${DOMAIN_NAME}/setup`, if you have not already.
+3. In Pocket ID, open **OIDC Clients → Add OIDC Client**. Name it `Tinyauth`, set the callback URL to
+   `https://tinyauth.${DOMAIN_NAME}/api/oauth/callback/pocketid` and leave **Public Client** off.
+   To let only some users in, pick a group under **Allowed User Groups**. Otherwise every Pocket ID
+   user can sign in.
+4. Copy the client ID and secret into `TINYAUTH_OIDC_CLIENT_ID` and `TINYAUTH_OIDC_CLIENT_SECRET`
+   in `.env`.
+5. Run `docker compose up -d`.
+6. Open `https://sonarr.${DOMAIN_NAME}`. You should land on Pocket ID, and after signing in you
+   are sent back to Sonarr.
+
+Browsers have to sign in before they reach an app's UI. The API paths skip Tinyauth so that mobile
+apps, the other *arrs, Prowlarr sync and calendar feeds keep working, and the app still requires
+its API key there:
+
+| App | Paths that skip Tinyauth |
+| --- | --- |
+| Sonarr, Radarr | `^/(api\|feed\|ping)` |
+| Prowlarr | `^/(api\|ping\|\d+/(api\|download))` |
+| Bazarr | `^/api` |
+
+The rules are `tinyauth.apps.*` labels on each app. Traefik adds the Tinyauth middleware through
+routers defined on the Tinyauth container, so without this profile, or while Tinyauth is down, the
+apps are served as before behind their own login. Keep that login enabled.
+
+To check that the API bypass works, call an API path without a key. The app itself should answer
+`401`, with no redirect to Pocket ID, and the same request with the key should return `200`:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://sonarr.${DOMAIN_NAME}/api/v3/system/status
+curl -s -o /dev/null -w "%{http_code}\n" -H "X-Api-Key: $SONARR_API_KEY" https://sonarr.${DOMAIN_NAME}/api/v3/system/status
+```
 
 ### Automation
 
@@ -505,7 +558,7 @@ sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
 #### [Traefik](apps/network/traefik.yaml)
 Reverse proxy and load balancer that fronts every web UI in the stack.
 - **Ports:** 80:80/tcp, 443:443/tcp
-- **Profiles:** `traefik`, `default`, `full`
+- **Profiles:** `traefik`, `auth`, `default`, `full`
 
 Routes any container with `traefik.enable: true` at `<container>.${DOMAIN_NAME}`, see
 [Networking](#networking). TLS is a single wildcard cert for `${DOMAIN_NAME}` and

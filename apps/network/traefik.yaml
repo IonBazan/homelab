@@ -3,7 +3,7 @@ services:
   traefik:
     container_name: traefik
     image: traefik:3
-    profiles: ["traefik", "default", "full"]
+    profiles: ["traefik", "auth", "default", "full"]
     ports:
       - published: 80
         target: 80

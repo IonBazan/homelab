@@ -38,17 +38,22 @@ check absent all       pihole
 check present pihole   pihole
 check absent all       tailscale
 check present tailscale tailscale
-check present all      homarr
+check present full     homarr
 check present homarr   homarr
 check absent  tools    homarr
 
 check present media    plex
 check present media    seerr
-check absent  arrs     seerr
+check present arrs     seerr
 check present arrs     radarr
 check absent  arrs     plex
 check absent  media    homepage
 check present vpn      gluetun
 check absent  vpn      plex
+check present auth     tinyauth
+check present auth     traefik
+check present tinyauth pocket-id
+check absent  tinyauth traefik
+check absent  default  tinyauth
 
 echo "OK"

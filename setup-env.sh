@@ -209,6 +209,8 @@ MANUAL=(
   "JELLYFIN_API_KEY|Homepage widget - Jellyfin > Dashboard > API Keys"
   "HOMEASSISTANT_TOKEN|Homepage widget - HA long-lived token"
   "TRAEFIK_DASHBOARD_AUTH|optional - htpasswd hash, \$ doubled to \$\$"
+  "TINYAUTH_OIDC_CLIENT_ID|profile auth - Pocket ID > OIDC Clients (see README)"
+  "TINYAUTH_OIDC_CLIENT_SECRET|profile auth - Pocket ID > OIDC Clients (see README)"
 )
 any=0
 for row in "${MANUAL[@]}"; do
