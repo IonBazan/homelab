@@ -14,9 +14,6 @@ entryPoints:
       tls: {}
     asDefault: true
 
-core:
-  defaultRuleSyntax: "v3"
-
 api:
   dashboard: true
 
