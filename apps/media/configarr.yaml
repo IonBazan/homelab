@@ -25,6 +25,11 @@ services:
     # Prowlarr's applications and download client, and exits.
     # A restart policy would make Docker relaunch it every minute, so keep it "no".
     restart: "no"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     networks:
       - traefik
 

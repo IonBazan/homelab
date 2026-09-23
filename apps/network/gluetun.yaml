@@ -23,6 +23,11 @@ services:
       retries: 3
       start_period: 30s
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     labels:
       traefik.enable: true
       traefik.http.routers.qbittorrent.rule: Host(`qbittorrent.${DOMAIN_NAME}`)

@@ -28,6 +28,11 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     command:
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true

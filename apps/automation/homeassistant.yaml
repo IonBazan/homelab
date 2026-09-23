@@ -9,6 +9,11 @@ services:
       - /run/dbus:/run/dbus:ro
     profiles: ["homeassistant", "automation", "basic", "default", "full"]
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     privileged: true
     network_mode: host
     labels:

@@ -19,6 +19,11 @@ services:
       TS_AUTH_ONCE: true
     network_mode: host
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
 volumes:
   tailscale_data:

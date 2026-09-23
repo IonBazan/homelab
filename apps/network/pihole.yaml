@@ -4,6 +4,11 @@ services:
     image: pihole/pihole
     container_name: pihole
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     profiles: ["pihole", "full"]
     ports:
       - 53:53/tcp

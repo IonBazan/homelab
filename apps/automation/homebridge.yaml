@@ -4,15 +4,15 @@ services:
     container_name: homebridge
     image: homebridge/homebridge:latest
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     network_mode: host
     profiles: ["homebridge", "automation", "basic", "default", "full"]
     volumes:
       - homebridge_data:/homebridge
-    logging:
-      driver: json-file
-      options:
-        max-size: "10mb"
-        max-file: "1"
     environment:
       TZ: ${TZ}
     labels:

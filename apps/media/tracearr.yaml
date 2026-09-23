@@ -16,6 +16,11 @@ services:
       tracearr-redis:
         condition: service_started
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     networks:
       - traefik
       - tracearr
@@ -52,6 +57,11 @@ services:
       timeout: 5s
       retries: 5
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     networks:
       - tracearr
 
@@ -62,6 +72,11 @@ services:
     volumes:
       - tracearr_redis_data:/data
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     networks:
       - tracearr
 

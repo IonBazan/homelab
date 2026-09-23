@@ -39,6 +39,8 @@ diff against their neighbours.
 - Always set `container_name` — traefik and the `myMedia` mounts all key off it.
 - `restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}` on every service (traefik itself is
   the exception, it uses `always`; run-once helpers — `configarr`, `qbittorrent-config` — use `"no"`).
+- Follow `restart:` with the same `logging:` block every service uses (`json-file`, `max-size: 10m`,
+  `max-file: "3"`). Compose has no stack-wide default, so each service carries it.
 - Use map syntax for `environment:` (`KEY: value`).
 - Declare named volumes in a `volumes:` block at the bottom of the same app file, prefixed with
   the app name (`radarr_data`, `tracearr_db_data`).

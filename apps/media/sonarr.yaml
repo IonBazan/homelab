@@ -17,6 +17,11 @@ services:
         condition: service_started
         required: false
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     networks:
       - traefik
     labels:

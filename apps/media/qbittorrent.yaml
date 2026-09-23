@@ -13,6 +13,11 @@ services:
       - qbittorrent_data:/config
       - myMedia:/media
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     # Shares gluetun's network namespace; its Traefik router is defined on the
     # gluetun service (apps/network/gluetun.yaml).
     network_mode: service:gluetun
@@ -53,6 +58,11 @@ services:
       - ../config/qbittorrent/apply-config.py:/apply-config.py:ro
     command: python3 /apply-config.py
     restart: "no"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
 volumes:
   qbittorrent_data:
