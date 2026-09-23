@@ -5,11 +5,13 @@
 #   * fill every blank secret that can be random - API keys, encryption/JWT
 #     secrets, qBittorrent + Pi-hole + Tracearr DB passwords
 #   * detect host values - LAN IP, LAN CIDR, timezone, PUID/PGID
+#   * prompt for the values only you know (domain, media dir, Cloudflare,
+#     Tailscale) when run from a terminal
 #   * scaffold .env.gluetun from the template
 #
 # Safe to re-run: your own values are never touched (detected host values
-# overwrite only a still-default placeholder). Tokens that must come from a
-# provider (Cloudflare, Plex, Tailscale, ...) are listed at the end.
+# overwrite only a still-default placeholder, prompts only ask for those).
+# Tokens that are still missing are listed at the end.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -38,7 +40,7 @@ env_has_value() { [ -n "$(raw_value "$1" "$2")" ]; }
 
 # set_env KEY VALUE FILE -> replace the uncommented line, else the commented one,
 # else append. Any trailing "# comment" on the original line is kept.
-# Values here are always [A-Za-z0-9./] so no escaping is needed.
+# Values must not contain ", \ or $ (prompt_value rejects them), so no escaping is needed.
 set_env() {
   local key=$1 val=$2 file=$3 tmp
   tmp=$(mktemp)
@@ -140,11 +142,40 @@ ipcidr=$(detect_ip_cidr || true)
 fill_detected PHYSICAL_SERVER_IP      "${ipcidr%% *}"
 fill_detected PHYSICAL_SERVER_NETWORK "$([ -n "$ipcidr" ] && echo "${ipcidr#* }")"
 fill_detected TZ                      "$(detect_tz || true)"
-if [ "$(id -u)" != "0" ]; then
+if [ -n "${SUDO_UID:-}" ] && [ "$SUDO_UID" != "0" ]; then
+  fill_detected PUID "$SUDO_UID"
+  fill_detected PGID "$SUDO_GID"
+elif [ "$(id -u)" != "0" ]; then
   fill_detected PUID "$(id -u)"
   fill_detected PGID "$(id -g)"
 else
   echo "  PUID/PGID                skipped (running as root)"
+fi
+
+# prompt_value KEY QUESTION -> ask only while the value is empty or still the
+# .env.example placeholder; Enter keeps the current value
+prompt_value() {
+  local key=$1 question=$2 cur val
+  cur=$(raw_value "$key" "$ENV_FILE")
+  [ -n "$cur" ] && [ "$cur" != "$(raw_value "$key" .env.example)" ] && return
+  while :; do
+    read -r -p "  $question [${cur}]: " val || { echo; return; }
+    [ -z "$val" ] && return
+    case $val in
+      *[\"\\\$]*) echo "    must not contain \", \\ or \$" ;;
+      *) set_env "$key" "$val" "$ENV_FILE"; return ;;
+    esac
+  done
+}
+
+if [ -t 0 ]; then
+  echo
+  echo "Your values (Enter to skip):"
+  prompt_value DOMAIN_NAME      "Domain served by Traefik"
+  prompt_value MEDIA_DIR        "Media root (holds Movies, Shows, Downloads)"
+  prompt_value CF_API_EMAIL     "Let's Encrypt / Cloudflare email"
+  prompt_value CF_DNS_API_TOKEN "Cloudflare DNS API token"
+  prompt_value TAILSCALE_TOKEN  "Tailscale auth key"
 fi
 
 # key                            generator
