@@ -11,6 +11,7 @@ services:
       RADARR__AUTH__APIKEY: ${RADARR_API_KEY:-}
     volumes:
       - radarr_data:/config
+      - ${BACKUP_DIR:?set BACKUP_DIR in .env}/radarr:/config/Backups
       - myMedia:/media
     depends_on:
       prowlarr:

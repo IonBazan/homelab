@@ -69,7 +69,3 @@ services:
   glances:
     ports:
       - ${GLANCES_PORT:-61208}:61208/tcp
-
-  wud:
-    ports:
-      - ${WUD_PORT:-3002}:3000/tcp

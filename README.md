@@ -72,7 +72,7 @@ There are three kinds of profile:
 
 | Group | Starts | Use it when |
 | --- | --- | --- |
-| `basic` | Media servers, the *arr apps, qBittorrent behind the VPN, home automation, Homepage, Glances, What's up Docker and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
+| `basic` | Media servers, the *arr apps, qBittorrent behind the VPN, home automation, Homepage, Glances and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
 | `default` | Everything in `basic`, plus Traefik | The usual setup, and the value `.env.example` ships with |
 | `full` | Every service in the repo, including AI, Pocket ID, Tinyauth, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
 
@@ -152,6 +152,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `DOMAIN_NAME` | Traefik, DNS | The domain you route services under, e.g. `homelab.example.com`. Every service is published at `<name>.${DOMAIN_NAME}`. |
 | `TZ` | all | _(auto)_ IANA name, e.g. `Europe/Warsaw` ([list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). |
 | `PUID` / `PGID` | media apps | _(auto)_ `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
+| `BACKUP_DIR` | app backups | **Required.** Absolute path that collects each app's scheduled backups in its own subdirectory, described under [Backups](#6-backups). `setup-env.sh` creates the subdirectories. |
 | `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
 | `COMPOSE_PROFILES` | service selection | _(auto if blank)_ Comma-separated (see [Profiles](#profiles)). `default` is `basic` plus Traefik. Add single profiles to a group, e.g. `default,ai`. |
 | `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host, described under [Host ports](#host-ports). Unset means Traefik and Tailscale only. |
@@ -168,7 +169,6 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | _(auto)_ `openssl rand -hex 16` each. Leave blank to let each app self-generate, in which case Configarr will not run. |
 | `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every `up -d` and wires the Homepage widget, described under [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank means you set it in the UI. |
 | `TINYAUTH_OIDC_CLIENT_ID` / `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | Only with the `auth` or `tinyauth` profile. An OIDC client in Pocket ID, described under [Tinyauth](#tinyauthappsauthtinyauthyaml). |
-| `WUD_PASSWORD` | What's up Docker | _(auto)_ Admin password for the UI and the Homepage widget. WUD will not start while it is blank. The username is `ADMIN_USER`. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
 
@@ -208,6 +208,44 @@ re-run it after the initial start:
 
 ```bash
 docker compose run --rm configarr
+```
+
+### 6. Backups
+
+Every app that makes its own scheduled backups writes them to a subdirectory of `BACKUP_DIR`, which
+is mounted over the app's default backup folder. Nothing in the stack uploads them. In my setup the
+host OS's built-in cloud integration syncs `BACKUP_DIR` one way to a cloud provider, and any one-way
+sync tool (rclone, a NAS cloud-sync task, a Drive client) pointed at the same directory works too.
+
+| Subdirectory | Mounted at | Schedule and retention set in |
+|---|---|---|
+| `radarr` | `/config/Backups` | Radarr > System > Backup (weekly by default) |
+| `sonarr` | `/config/Backups` | Sonarr > System > Backup (weekly by default) |
+| `prowlarr` | `/config/Backups` | Prowlarr > System > Backup (weekly by default) |
+| `bazarr` | `/config/backup` | Bazarr > Settings > Backup (weekly by default) |
+| `tracearr` | `/data/backup` | Tracearr's backup settings |
+| `homeassistant` | `/config/backups` | Home Assistant > Settings > System > Backups |
+
+The apps write these backups consistently while running, so they are safe to restore from. Each
+app also prunes its own old backups, so the sync tool should mirror deletions or keep its own
+history.
+
+Each subdirectory has to be writable by the user its app runs as. The linuxserver apps (Radarr,
+Sonarr, Prowlarr, Bazarr) run as `PUID` and Home Assistant as root, so directories you own work for
+them. Tracearr runs as uid 1001 and needs its directory to belong to that uid, as described in
+[its backup docs](https://docs.tracearr.com/configuration/backup#permissions):
+
+```bash
+sudo chown -R 1001 /path/to/backups/tracearr   # same path as BACKUP_DIR
+```
+
+`setup-env.sh` creates the subdirectories as your user and prints that command for Tracearr (or
+runs it under `sudo`). If an app started before its directory existed, Docker created it as
+`root:root` and the app gets "Permission denied" writing backups. Check with `ls -ld` and hand it
+back to your user, or to uid 1001 for Tracearr:
+
+```bash
+sudo chown -R "$(id -u):$(id -g)" /path/to/backups/radarr
 ```
 
 ## Networking
@@ -296,7 +334,6 @@ out when Pocket ID is down.
 | --- | --- | --- |
 | Open-WebUI | `OPEN_WEBUI_OIDC_CLIENT_ID`, `_SECRET` | `https://ai.${DOMAIN_NAME}/oauth/oidc/callback` |
 | Homarr | `HOMARR_OIDC_CLIENT_ID`, `_SECRET` | `https://homarr.${DOMAIN_NAME}/api/auth/callback/oidc` |
-| What's up Docker | `WUD_OIDC_CLIENT_ID`, `_SECRET` | `https://wud.${DOMAIN_NAME}/auth/oidc/pocketid/cb` |
 
 Open-WebUI links a Pocket ID login to an existing account with the same email. Homarr creates a
 separate user for it.
@@ -613,8 +650,8 @@ through the `sh-<name>.webp` prefix, with `mdi-…` for the few without one.
 Service widgets pull stats when a credential is present in `.env`, otherwise the tile is link-only.
 The credentials are Sonarr, Radarr and Prowlarr (`*_API_KEY`), Pi-hole (`PIHOLE_PASSWORD`), Plex
 (`PLEX_TOKEN`), Jellyfin (`JELLYFIN_API_KEY`), Bazarr (`BAZARR_API_KEY`), Seerr (`SEERR_API_KEY`),
-Home Assistant (`HOMEASSISTANT_TOKEN`), qBittorrent (`QBITTORRENT_USERNAME`,
-`QBITTORRENT_PASSWORD`) and What's up Docker (`ADMIN_USER`, `WUD_PASSWORD`).
+Home Assistant (`HOMEASSISTANT_TOKEN`) and qBittorrent (`QBITTORRENT_USERNAME`,
+`QBITTORRENT_PASSWORD`).
 
 #### [Homarr](apps/tools/homarr.yaml)
 Alternative self-hosted dashboard with Docker integration, configured through its own UI.
@@ -639,20 +676,6 @@ summarising it on the dashboard.
 It runs in the host PID namespace and reads the Docker socket, so CPU, memory, disk and process
 figures are the host's. Network counters are the container's own, since it stays on the `traefik`
 network. There is no authentication in front of the web UI, so keep it off the public internet.
-
-#### [What's up Docker](apps/tools/wud.yaml)
-Watches every running container and reports which images have a newer version upstream.
-- **Ports:** 3002:3000/tcp (WUD_PORT), overlay only, see [Host ports](#host-ports)
-- **Profiles:** `wud`, `tools`, `basic`, `default`, `full`
-- Proxied by Traefik at `https://wud.${DOMAIN_NAME}`.
-
-No per-container labels are needed. The Docker watcher picks up every container on the socket by
-default (`WATCHBYDEFAULT` is true) and checks hourly. Add `wud.watch: false` to a container to skip
-it, or `wud.tag.include` to tell WUD which tag pattern counts as an update for images that do not
-use plain `latest`.
-
-Set `WUD_PASSWORD` in `.env`, since WUD refuses to start without an admin password. The username
-comes from `ADMIN_USER`, which defaults to `admin`. The same pair feeds the Homepage widget.
 
 ## Contributing
 

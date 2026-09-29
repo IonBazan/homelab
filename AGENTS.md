@@ -44,6 +44,15 @@ diff against their neighbours.
 - Use map syntax for `environment:` (`KEY: value`).
 - Declare named volumes in a `volumes:` block at the bottom of the same app file, prefixed with
   the app name (`radarr_data`, `tracearr_db_data`).
+- An app with built-in scheduled backups mounts `${BACKUP_DIR:?set BACKUP_DIR in .env}/<app>` over
+  its default backup folder. `BACKUP_DIR` is the single backup root; the host OS syncs it one way
+  to a cloud provider, so nothing in the stack uploads backups and no backup container is needed.
+  When adding such an app:
+  - add `<app>` to the backup directory loop in `setup-env.sh` and a row to the table under
+    "6. Backups" in the README;
+  - check which uid the image writes as. `PUID`-aware images and root work with the directory
+    `setup-env.sh` creates; a fixed non-root uid (Tracearr's 1001) needs a `sudo chown -R <uid>`
+    step in `setup-env.sh` and the README, like Tracearr's.
 
 ### Profiles
 

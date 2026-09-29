@@ -11,6 +11,7 @@ services:
       SONARR__AUTH__APIKEY: ${SONARR_API_KEY:-}
     volumes:
       - sonarr_data:/config
+      - ${BACKUP_DIR:?set BACKUP_DIR in .env}/sonarr:/config/Backups
       - myMedia:/media
     depends_on:
       prowlarr:

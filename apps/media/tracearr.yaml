@@ -5,6 +5,8 @@ services:
     container_name: tracearr
     profiles: ["tracearr", "media", "basic", "default", "full"]
     environment:
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       TZ: ${TZ}
       DATABASE_URL: postgres://tracearr:${TRACEARR_DB_PASSWORD:-tracearr}@tracearr-db:5432/tracearr
       REDIS_URL: redis://tracearr-redis:6379
@@ -16,6 +18,9 @@ services:
       tracearr-redis:
         condition: service_started
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    volumes:
+      - ${BACKUP_DIR:?set BACKUP_DIR in .env}/tracearr:/data/backup
+      - tracearr_images:/data/tracearr/image-cache
     logging:
       driver: json-file
       options:
@@ -81,8 +86,10 @@ services:
       - tracearr
 
 networks:
-  tracearr: ~
+  tracearr:
+    driver: bridge
 
 volumes:
   tracearr_db_data:
   tracearr_redis_data:
+  tracearr_images:

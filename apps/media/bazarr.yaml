@@ -11,6 +11,7 @@ services:
       BAZARR__AUTH__APIKEY: ${BAZARR_API_KEY:-}
     volumes:
       - bazarr_data:/config
+      - ${BACKUP_DIR:?set BACKUP_DIR in .env}/bazarr:/config/backup
       - myMedia:/media
     depends_on:
       radarr:

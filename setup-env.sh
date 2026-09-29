@@ -7,6 +7,7 @@
 #   * detect host values - LAN IP, LAN CIDR, timezone, PUID/PGID
 #   * prompt for the values only you know (domain, media dir, Cloudflare,
 #     Tailscale) when run from a terminal
+#   * create one backup directory per app under BACKUP_DIR
 #   * scaffold .env.gluetun from the template
 #
 # Safe to re-run: your own values are never touched (detected host values
@@ -173,6 +174,7 @@ if [ -t 0 ]; then
   echo "Your values (Enter to skip):"
   prompt_value DOMAIN_NAME      "Domain served by Traefik"
   prompt_value MEDIA_DIR        "Media root (holds Movies, Shows, Downloads)"
+  prompt_value BACKUP_DIR       "Backup root (one subdirectory per app)"
   prompt_value CF_API_EMAIL     "Let's Encrypt / Cloudflare email"
   prompt_value CF_DNS_API_TOKEN "Cloudflare DNS API token"
   prompt_value TAILSCALE_TOKEN  "Tailscale auth key"
@@ -191,7 +193,6 @@ GEN=(
   "QBITTORRENT_PASSWORD          rand_pass"
   "PIHOLE_PASSWORD               rand_pass"
   "TRACEARR_DB_PASSWORD          rand_pass"
-  "WUD_PASSWORD                  rand_pass"
 )
 
 echo
@@ -206,6 +207,29 @@ for row in "${GEN[@]}"; do
     printf '  %-30s generated\n' "$key"
   fi
 done
+
+# --- backup directories ------------------------------------------------------
+# Created here so they belong to you, not root. Tracearr runs as uid 1001, so
+# its directory has to belong to that uid instead, which needs root.
+echo
+echo "Backups:"
+backup_dir=$(raw_value BACKUP_DIR "$ENV_FILE")
+case $backup_dir in
+  /*)
+    for app in radarr sonarr prowlarr bazarr tracearr homeassistant; do
+      [ -d "$backup_dir/$app" ] && continue
+      mkdir -p "$backup_dir/$app"
+      [ -n "${SUDO_UID:-}" ] && chown "$SUDO_UID:$SUDO_GID" "$backup_dir" "$backup_dir/$app"
+      echo "  created $backup_dir/$app"
+    done
+    if [ "$(id -u)" = "0" ]; then
+      chown -R 1001 "$backup_dir/tracearr"
+    elif [ "$(ls -nd "$backup_dir/tracearr" | awk '{print $3}')" != "1001" ]; then
+      echo "  Tracearr writes as uid 1001, run: sudo chown -R 1001 $backup_dir/tracearr"
+    fi
+    ;;
+  *) echo "  BACKUP_DIR must be an absolute path, directories not created" ;;
+esac
 
 # --- .env.gluetun ---------------------------------------------------------------
 echo
