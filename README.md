@@ -187,10 +187,32 @@ provider block. To use WireGuard instead, point the symlink at `.env.gluetun.wir
 Set `FIREWALL_OUTBOUND_SUBNETS` to your LAN CIDR so the qBittorrent WebUI stays reachable while the
 tunnel is up.
 
-### 4. Create the media layout
+### 4. Create the folder layout
+
+I keep everything in the home directory of the user that runs the stack:
+
+```
+~/
+|-- homelab/            this repository, run docker compose from here
+|-- Media/              MEDIA_DIR, mounted at /media in the media apps
+|   |-- Movies/         Radarr root folder, Plex/Jellyfin movie library
+|   |-- Shows/          Sonarr root folder, Plex/Jellyfin TV library
+|   `-- Downloads/      qBittorrent save path, hardlinked into Movies/Shows
+`-- Backups/            BACKUP_DIR, synced one way to the cloud
+    |-- radarr/         one subfolder per app with built-in backups,
+    |-- sonarr/         created by setup-env.sh (see Backups below)
+    |-- prowlarr/
+    |-- bazarr/
+    |-- tracearr/
+    `-- homeassistant/
+```
+
+Any paths work. Set `MEDIA_DIR` and `BACKUP_DIR` to absolute paths (Compose does not expand `~`),
+for example `/home/<user>/Media`, and keep `Downloads/` on the same filesystem as `Movies/` and
+`Shows/` so the *arr apps can hardlink instead of copying.
 
 ```bash
-mkdir -p /path/to/media/{Movies,Shows,Downloads}   # same path as MEDIA_DIR
+mkdir -p ~/Media/{Movies,Shows,Downloads}   # same path as MEDIA_DIR
 ```
 
 ### 5. Launch
@@ -676,6 +698,18 @@ summarising it on the dashboard.
 It runs in the host PID namespace and reads the Docker socket, so CPU, memory, disk and process
 figures are the host's. Network counters are the container's own, since it stays on the `traefik`
 network. There is no authentication in front of the web UI, so keep it off the public internet.
+
+## Testing
+
+`tests/validate-compose.sh` renders the whole stack with placeholder values instead of your `.env`,
+with and without the ports overlay, and checks that each profile starts the services it should.
+Run it after changing any compose file:
+
+```bash
+tests/validate-compose.sh
+```
+
+It needs only Docker Compose and starts no containers.
 
 ## Contributing
 

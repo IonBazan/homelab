@@ -10,6 +10,7 @@ export PGID="1000"
 export PHYSICAL_SERVER_IP="127.0.0.1"
 export PUBLIC_DOMAIN="test.tld"
 export MEDIA_DIR="/tmp/media"
+export BACKUP_DIR="/tmp/backups"
 
 set -x
 

@@ -6,8 +6,8 @@ A personal homelab: one Docker Compose stack that runs media, network, automatio
 tooling services on a single always-on server. It is deployed by running `docker compose up -d`
 from the repo root on that server, so every change here is a change to a live system.
 
-There is no build step, no application code and no test suite — the deliverable is YAML that a
-human reads and Docker consumes. Optimise for files that are boring, consistent and easy to
+There is no build step and no application code. The deliverable is YAML that a human reads and
+Docker consumes, and `tests/validate-compose.sh` is the only test. Optimise for files that are boring, consistent and easy to
 diff against their neighbours.
 
 ## Layout
@@ -29,6 +29,8 @@ diff against their neighbours.
   secrets, detects host values (LAN IP/CIDR, timezone, PUID/PGID), scaffolds `.env.gluetun`.
   Idempotent. Keep it in sync when you add variables (see "Adding an app").
 - `README.md` — a per-service catalogue with ports and profiles, kept in sync with `apps/`.
+- `tests/validate-compose.sh`: renders the stack without `.env` (with and without the ports overlay)
+  and checks which services each profile starts.
 
 ## Conventions
 
@@ -119,16 +121,29 @@ how the host behaves; those stay in `full` only.
 5. Prefer the upstream project's own recommended compose file as the starting point, then strip
    it to the minimum that works here: drop settings that only restate image defaults, and keep
    the ones that are load-bearing.
+6. Add `check` lines for the app's profiles to `tests/validate-compose.sh` and run it.
 
 ## Verifying
+
+Run the test suite after any change to the compose files, `.env.example` or profiles:
+
+```bash
+tests/validate-compose.sh
+```
+
+It ignores `.env` and exports placeholder values for the variables the stack cannot render without,
+then renders every included file (catching schema errors, bad references and unresolved variables)
+and asserts which services each profile starts. Keep it in step with the stack:
+
+- a new required variable (`${VAR:?...}` or no default) gets a placeholder `export` at the top;
+- a new app, profile or group gets `check present` / `check absent` lines for where it should and
+  should not start.
+
+Also render the stack with the real `.env`, plain and with the ports overlay:
 
 ```bash
 docker compose config --quiet
 ```
-
-That renders every included file with the current `.env` and is the only check available — it
-catches schema errors, bad references and unresolved variables. Run it after any YAML change,
-and once more with the ports overlay:
 
 ```bash
 COMPOSE_FILE=docker-compose.yaml:docker-compose.ports.yaml docker compose config --quiet
