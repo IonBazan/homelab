@@ -103,6 +103,21 @@ To check what a value starts before launching it:
 COMPOSE_PROFILES="default,auth" docker compose config --services
 ```
 
+## Hardware
+
+The stack runs on a UGREEN DXP2800 NAS:
+
+- **CPU:** Intel N100 (4 cores, 4 threads). Its integrated graphics handle Plex hardware
+  transcoding.
+- **Memory:** 8 GB DDR5
+- **Network:** 2.5 GbE
+
+| Pool | Drives | Layout | Holds |
+|---|---|---|---|
+| Storage Pool 1 (Volume 1) | 2 × HDD | RAID 1 | Media, backups and other data (`MEDIA_DIR`, `BACKUP_DIR`) |
+| Storage Pool 2 (Volume 2) | 1 × M.2 SSD | Basic | Docker images and volumes |
+| SSD Cache 1 | 1 × M.2 SSD | Read cache | Speeds up reads from Storage Pool 1 |
+
 ## Setup
 
 ### Prerequisites
