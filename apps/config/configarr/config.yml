@@ -5,7 +5,7 @@ recyclarrConfigUrl: https://github.com/recyclarr/config-templates
 # CONFIGARR_ENABLE_MERGE=true (set in apps/media/configarr.yaml).
 # host is `gluetun` because qBittorrent shares gluetun's network namespace;
 # `port` must match QBITTORRENT_PORT (default 8081). Credentials come from the
-# same env vars the qbittorrent-config seeder uses, so the *arr client stays in
+# same env vars qBittorrent's webui-login.sh uses, so the *arr client stays in
 # sync with the WebUI login (update_password: true re-pushes it on every run).
 x-download-clients:
   qbittorrent: &qbittorrent

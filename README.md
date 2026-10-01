@@ -182,7 +182,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `HOMARR_SECRET_ENCRYPTION_KEY` | Homarr | _(auto)_ `openssl rand -hex 32` |
 | `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | _(auto)_ `openssl rand -hex 32` each |
 | `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | _(auto)_ `openssl rand -hex 16` each. Leave blank to let each app self-generate, in which case Configarr will not run. |
-| `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every `up -d` and wires the Homepage widget, described under [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank means you set it in the UI. |
+| `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every container start and wires the Homepage widget, described under [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank means you set it in the UI. |
 | `TINYAUTH_OIDC_CLIENT_ID` / `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | Only with the `auth` or `tinyauth` profile. An OIDC client in Pocket ID, described under [Tinyauth](#tinyauthappsauthtinyauthyaml). |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
@@ -473,18 +473,19 @@ Open-source BitTorrent client with a web UI, running behind a VPN for privacy.
 - **Profiles:** `qbittorrent`, `vpn`, `basic`, `default`, `full`
 - **Traefik:** its router is defined on the `gluetun` service, because qBittorrent shares gluetun's network namespace.
 
-A run-once `qbittorrent-config` container ([`apply-config.py`](apps/config/qbittorrent/apply-config.py))
-runs before qBittorrent on each `up -d`. It copies the seed
-[`apps/config/qbittorrent/qBittorrent.conf`](apps/config/qbittorrent/qBittorrent.conf) into the
-`qbittorrent_data` volume **only if it isn't there yet** (legal notice accepted, downloads at
-`/media/Downloads`, reverse-proxy-friendly WebUI settings). If `QBITTORRENT_PASSWORD` is set, it
-then writes `WebUI\Username` and `WebUI\Password_PBKDF2` in qBittorrent's own PBKDF2-HMAC-SHA512
-format. That step is idempotent, and the conf only changes when you change the env var, so the login
-survives every restart and recreate. The same `QBITTORRENT_PASSWORD` and `QBITTORRENT_USERNAME` feed
+The seed [`apps/config/qbittorrent/qBittorrent.conf`](apps/config/qbittorrent/qBittorrent.conf) is
+mounted over the image's default config, so the image copies it into the `qbittorrent_data` volume
+**only if it isn't there yet** (legal notice accepted, downloads at `/media/Downloads`,
+reverse-proxy-friendly WebUI settings). On every start,
+[`webui-login.sh`](apps/config/qbittorrent/webui-login.sh) runs from the image's
+`/custom-cont-init.d` before qBittorrent launches. If `QBITTORRENT_PASSWORD` is set, it writes
+`WebUI\Username` and `WebUI\Password_PBKDF2` in qBittorrent's own PBKDF2-HMAC-SHA512 format. That
+step is idempotent, and the conf only changes when you change the env var, so the login survives
+every restart and recreate. The same `QBITTORRENT_PASSWORD` and `QBITTORRENT_USERNAME` feed
 the Homepage widget, so the tile lights up with no extra config.
 
 With `QBITTORRENT_PASSWORD` set, manage the password **in `.env`, not the UI**, because a UI change
-is reverted on the next `up -d`. Leave it blank to do the opposite. qBittorrent then owns the login,
+is reverted on the next container start. Leave it blank to do the opposite. qBittorrent then owns the login,
 logs a temporary password on first start
 (`docker compose logs qbittorrent | grep -i password`), and keeps whatever you set under
 *Options > Web UI*. With `QBITTORRENT_PASSWORD` set, Configarr wires the client into Sonarr and
