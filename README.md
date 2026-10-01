@@ -74,10 +74,11 @@ There are three kinds of profile:
 | --- | --- | --- |
 | `basic` | Media servers, the *arr apps, qBittorrent behind the VPN, home automation, Homepage, Glances and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
 | `default` | Everything in `basic`, plus Traefik | The usual setup, and the value `.env.example` ships with |
-| `full` | Every service in the repo, including AI, Pocket ID, Tinyauth, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
+| `full` | Every long-running service in the repo, including AI, Pocket ID, Tinyauth, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
 
 The AI stack, Pocket ID, Tinyauth and Homarr are heavy or need extra setup, and Pi-hole, Tailscale
 and Gangplank change how the host or router behaves, so only `full` or their own profiles start them.
+Configarr is in no group at all. It only runs when you call it, see [Configarr](#configarrappsmediaconfigarryaml).
 
 ### Dependencies
 
@@ -240,8 +241,8 @@ With the `traefik` profile on, the first start issues one wildcard certificate o
 DNS-01 challenge. Follow it with `docker compose logs -f traefik`. Re-run the same command after any
 `.env` change.
 
-`configarr` runs once and exits. The *arr apps need to have generated their databases first, so
-re-run it after the initial start:
+`configarr` only runs on demand. Once the *arr apps have generated their databases after the
+initial start, run it with:
 
 ```bash
 docker compose run --rm configarr
@@ -541,7 +542,7 @@ same `RADARR_API_KEY` and `RADARR__AUTH__APIKEY` pair.
 Syncs [TRaSH-Guides](https://trash-guides.info/) custom formats, quality definitions and quality
 profiles into Sonarr and Radarr, driven by [`apps/config/configarr/config.yml`](apps/config/configarr/config.yml).
 - **Ports:** none (run-once container)
-- **Profiles:** `configarr`, `arrs`, `media`, `basic`, `default`, `full`
+- **Profiles:** `configarr` only, so `docker compose up -d` never starts it
 
 Requires `SONARR_API_KEY`, `RADARR_API_KEY` and `PROWLARR_API_KEY` in `.env`. It reads them through
 `!env` and reaches each app over the `traefik` network. It also manages the root folders, pointing
@@ -553,7 +554,7 @@ shared through a YAML anchor, with `CONFIGARR_ENABLE_MERGE=true` set on the cont
 points at `gluetun:8081` because qBittorrent shares gluetun's network namespace. It uses categories
 `tv-sonarr` and `radarr`, and authenticates with `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD`.
 `update_password: true` re-pushes the password on each run, so it tracks the same `.env` value the
-qBittorrent seeder uses. Set `QBITTORRENT_PASSWORD` or run `setup-env.sh`, otherwise the client is
+qBittorrent WebUI login uses. Set `QBITTORRENT_PASSWORD` or run `setup-env.sh`, otherwise the client is
 created with a blank password and will not connect.
 
 In **Prowlarr** it registers Sonarr and Radarr as applications on `fullSync`, adds the same
@@ -563,7 +564,9 @@ and re-run Configarr, or let Prowlarr's own sync pick them up. The applications 
 left untagged, because a tagged application only receives indexers carrying the same tag. Nothing is
 deleted, so anything you added by hand in Prowlarr stays.
 
-It runs once and exits on `docker compose up -d`. Re-run it at any time with:
+It runs only when you call it, whatever `COMPOSE_PROFILES` says, because Compose turns on the
+profile of a service named on the command line. It starts Sonarr, Radarr and Prowlarr first if they
+are not running, applies the config and exits:
 
 ```bash
 docker compose run --rm configarr

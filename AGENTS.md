@@ -64,7 +64,7 @@ that file), its category profiles, then the groups it belongs to:
 
 - `basic` — the everyday stack: media, arrs, vpn, automation, tools, network
 - `default` — `basic` plus traefik
-- `full` — every service, always included
+- `full` — every long-running service, always included
 - `media` / `arrs` / `plex` / `jellyfin` — media servers, and the *arr apps that manage them
 - `vpn` — anything that must sit behind gluetun
 - `ai`, `auth`, `automation`, `homarr`, `network`, `pihole`, `tailscale`, `tools`, `traefik` — the
@@ -76,6 +76,9 @@ dependency instead.
 
 A new service goes in `basic` and `default` too, unless it is heavy, needs extra setup, or changes
 how the host behaves; those stay in `full` only.
+
+An on-demand tool (`configarr`) lists only its app profile, not even `full`, so `up -d` never starts
+it. `docker compose run --rm <app>` still works, because naming a service enables its profiles.
 
 ### Networking
 

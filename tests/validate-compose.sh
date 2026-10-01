@@ -56,5 +56,8 @@ check present auth     traefik
 check present tinyauth pocket-id
 check absent  tinyauth traefik
 check absent  default  tinyauth
+check absent  full     configarr
+check present configarr configarr
+check present configarr sonarr
 
 echo "OK"
