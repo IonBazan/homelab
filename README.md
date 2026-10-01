@@ -168,7 +168,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `DOMAIN_NAME` | Traefik, DNS | The domain you route services under, e.g. `homelab.example.com`. Every service is published at `<name>.${DOMAIN_NAME}`. |
 | `TZ` | all | _(auto)_ IANA name, e.g. `Europe/Warsaw` ([list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). |
 | `PUID` / `PGID` | media apps | _(auto)_ `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
-| `BACKUP_DIR` | app backups | **Required.** Absolute path that collects each app's scheduled backups in its own subdirectory, described under [Backups](#6-backups). `setup-env.sh` creates the subdirectories. |
+| `BACKUP_DIR` | app backups | **Required.** Absolute path that collects each app's scheduled backups in its own subdirectory, described under [Backups](#7-backups). `setup-env.sh` creates the subdirectories. |
 | `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
 | `COMPOSE_PROFILES` | service selection | _(auto if blank)_ Comma-separated (see [Profiles](#profiles)). `default` is `basic` plus Traefik. Add single profiles to a group, e.g. `default,ai`. |
 | `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host, described under [Host ports](#host-ports). Unset means Traefik and Tailscale only. |
@@ -241,14 +241,18 @@ With the `traefik` profile on, the first start issues one wildcard certificate o
 DNS-01 challenge. Follow it with `docker compose logs -f traefik`. Re-run the same command after any
 `.env` change.
 
-`configarr` only runs on demand. Once the *arr apps have generated their databases after the
-initial start, run it with:
+### 6. Configure the *arr apps
+
+Once Sonarr, Radarr and Prowlarr have finished their first start and created their databases, run
+Configarr. It applies the TRaSH-Guides profiles, root folders, the qBittorrent download client and
+the Prowlarr app links, then exits. It never runs on `up -d`, so re-run it after changing
+[`config.yml`](apps/config/configarr/config.yml) or the qBittorrent password:
 
 ```bash
 docker compose run --rm configarr
 ```
 
-### 6. Backups
+### 7. Backups
 
 Every app that makes its own scheduled backups writes them to a subdirectory of `BACKUP_DIR`, which
 is mounted over the app's default backup folder. Nothing in the stack uploads them. In my setup the

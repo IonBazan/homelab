@@ -51,7 +51,7 @@ diff against their neighbours.
   to a cloud provider, so nothing in the stack uploads backups and no backup container is needed.
   When adding such an app:
   - add `<app>` to the backup directory loop in `setup-env.sh` and a row to the table under
-    "6. Backups" in the README;
+    "7. Backups" in the README;
   - check which uid the image writes as. `PUID`-aware images and root work with the directory
     `setup-env.sh` creates; a fixed non-root uid (Tracearr's 1001) needs a `sudo chown -R <uid>`
     step in `setup-env.sh` and the README, like Tracearr's.
