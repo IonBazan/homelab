@@ -474,8 +474,13 @@ traefik.http.routers.<app>-public.service: <app>
 
 The first line keeps the LAN router: once a container defines any router, Traefik stops creating its
 default one, and a router without a `rule` falls back to `<app>.${DOMAIN_NAME}`. Only expose apps that
-have their own login. Public routers serve the `${DOMAIN_NAME}` wildcard certificate for now, so
-browsers warn about the name until `PUBLIC_DOMAIN` gets a certificate of its own.
+have their own login.
+
+Public hostnames get their own wildcard certificate, for `${PUBLIC_DOMAIN}` and `*.${PUBLIC_DOMAIN}`,
+through the same Cloudflare DNS challenge. A small `public-cert` router on the Traefik container
+requests it, so a failed public renewal never touches the `${DOMAIN_NAME}` certificate. That router
+only matches the bare `${PUBLIC_DOMAIN}` and answers it with `418`. Public subdomains with no app
+behind them return `404`.
 
 Everything else stays private to the LAN and the tailnet.
 
@@ -829,7 +834,8 @@ header, so it stays unauthenticated without exposing the API.
 
 A third entrypoint, `public` on port 8443, carries traffic from the internet. Only routers that set
 `entrypoints: public` listen on it, so forwarding WAN 443 there cannot reach a LAN-only app, even with
-a spoofed `Host` header. See [Public internet](#public-internet-optional).
+a spoofed `Host` header. It serves a separate wildcard certificate for `${PUBLIC_DOMAIN}`. See
+[Public internet](#public-internet-optional).
 
 The shared `middlewares-secure-headers` middleware (nosniff, frame-options, referrer and permissions
 policy) is applied to every proxied route through the `websecure` and `public` entrypoints. Edit

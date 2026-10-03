@@ -86,6 +86,14 @@ services:
       traefik.http.routers.catch-all.middlewares: catch-all-redirect
       traefik.http.middlewares.catch-all-redirect.redirectregex.regex: .*
       traefik.http.middlewares.catch-all-redirect.redirectregex.replacement: ${TRAEFIK_CATCHALL_URL:-about:blank}
+      # separate wildcard cert for ${PUBLIC_DOMAIN}, so a failed public renewal never
+      # touches the default cert. Traefik serves it by SNI to every public router.
+      traefik.http.routers.public-cert.rule: Host(`${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}`)
+      traefik.http.routers.public-cert.entrypoints: public
+      traefik.http.routers.public-cert.service: noop@internal
+      traefik.http.routers.public-cert.tls.certresolver: letsencrypt
+      traefik.http.routers.public-cert.tls.domains[0].main: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}
+      traefik.http.routers.public-cert.tls.domains[0].sans: "*.${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}"
       homepage.group: Network
       homepage.name: Traefik
       homepage.icon: sh-traefik.webp
