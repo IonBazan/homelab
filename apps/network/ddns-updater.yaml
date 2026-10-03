@@ -12,6 +12,11 @@ services:
       TZ: ${TZ}
       LISTENING_ADDRESS: ':8000'
       ROOT_URL: /
+      CONFIG: >-
+        {"settings": [
+        {"provider": "cloudflare", "zone_identifier": "${CF_ZONE_ID}", "domain": "${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}", "ttl": 1, "token": "${CF_DNS_API_TOKEN}", "ip_version": "ipv4"},
+        {"provider": "cloudflare", "zone_identifier": "${CF_ZONE_ID}", "domain": "*.${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}", "ttl": 1, "token": "${CF_DNS_API_TOKEN}", "ip_version": "ipv4"}
+        ]}
     networks:
       - traefik
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}

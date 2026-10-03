@@ -13,6 +13,10 @@ services:
         target: 443
         protocol: tcp
         mode: host
+      - published: ${TRAEFIK_PUBLIC_PORT:-8443}
+        target: 8443
+        protocol: tcp
+        mode: host
     environment:
       CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
       TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${CF_API_EMAIL}
@@ -37,6 +41,7 @@ services:
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
       - --entrypoints.websecure.http.middlewares=middlewares-secure-headers@file
+      - --entrypoints.public.http.middlewares=middlewares-secure-headers@file
       - --certificatesresolvers.letsencrypt.acme.caserver=${LETS_ENCRYPT_ENV:-https://acme-v02.api.letsencrypt.org/directory}
     extra_hosts:
       - host.docker.internal:host-gateway

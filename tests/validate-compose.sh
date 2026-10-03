@@ -9,6 +9,7 @@ export PUID="1000"
 export PGID="1000"
 export PHYSICAL_SERVER_IP="127.0.0.1"
 export PUBLIC_DOMAIN="test.tld"
+export CF_ZONE_ID="test"
 export MEDIA_DIR="/tmp/media"
 export BACKUP_DIR="/tmp/backups"
 

@@ -58,10 +58,11 @@ architectures out of the box.
 Cloudflare resolves `${DOMAIN_NAME}` and `*.${DOMAIN_NAME}` to the server's LAN IP. At home, every
 web UI is reached through Traefik at `https://<container>.${DOMAIN_NAME}`; away from home,
 Tailscale's subnet route reaches the same address. Traefik gets its certificates through
-Cloudflare's DNS challenge. DDNS Updater keeps a separate hostname, `PUBLIC_DOMAIN`, pointed at the
-home's public IP; only Plex uses it, for remote access. With `TINYAUTH_ENABLED` set, Tinyauth puts a
-Pocket ID login in front of the *arr apps, and qBittorrent shares Gluetun's network so its traffic
-leaves through the VPN. Icons come from [selfh.st/icons](https://selfh.st/icons/).
+Cloudflare's DNS challenge. DDNS Updater keeps a separate Cloudflare hostname, `PUBLIC_DOMAIN`,
+pointed at the home's public IP, for Plex remote access and any app that opts in to a public
+hostname. With `TINYAUTH_ENABLED` set, Tinyauth puts a Pocket ID login in front of the *arr apps,
+and qBittorrent shares Gluetun's network so its traffic leaves through the VPN. Icons come from
+[selfh.st/icons](https://selfh.st/icons/).
 
 ```mermaid
 ---
@@ -144,7 +145,7 @@ flowchart TB
     tailscale -->|"subnet route"| traefik
     internet ---|"VPN tunnel"| gluetun
     internet --- cloudflare
-    cloudflare ---|"public IP for Plex"| ddns
+    cloudflare ---|"PUBLIC_DOMAIN, public IP"| ddns
     cloudflare ---|"ACME DNS challenge"| traefik
     internet ---|"port forwarding"| gangplank
 
@@ -293,10 +294,11 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host, described under [Host ports](#host-ports). Unset means Traefik and Tailscale only. |
 | `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | _(auto)_ Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
 | `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | _(auto)_ Your LAN CIDR, e.g. `192.168.18.0/24`. |
-| `PUBLIC_DOMAIN` | Plex remote access | A public hostname tracking your home IP, described under [Networking](#networking). |
+| `PUBLIC_DOMAIN` | Plex remote access, public routers | A hostname in your Cloudflare zone, such as `public.example.tld`, that DDNS Updater keeps on your public IP, described under [Public internet](#public-internet-optional). |
 | `PLEX_CLAIM` | Plex first run | Fresh token from <https://www.plex.tv/claim> (valid about 4 minutes). Can be blanked after first start. |
 | `TAILSCALE_TOKEN` | Tailscale | Tailscale admin → **Settings → Keys → Generate auth key**. Mark it *Reusable* and *Pre-approved* to skip manual route approval. |
-| `CF_DNS_API_TOKEN` | Traefik HTTPS | Cloudflare → **My Profile → API Tokens → Create Token → "Edit zone DNS"**, scoped to your zone (`Zone:DNS:Edit` and `Zone:Zone:Read`). |
+| `CF_DNS_API_TOKEN` | Traefik HTTPS, DDNS Updater | Cloudflare → **My Profile → API Tokens → Create Token → "Edit zone DNS"**, scoped to your zone (`Zone:DNS:Edit` and `Zone:Zone:Read`). If `PUBLIC_DOMAIN` is in another zone, include both zones. |
+| `CF_ZONE_ID` | DDNS Updater | Cloudflare → your domain → **Overview → Zone ID**, for the zone that holds `PUBLIC_DOMAIN`. It can differ from the `DOMAIN_NAME` zone. |
 | `CF_API_EMAIL` | Traefik HTTPS | Your Cloudflare account email, used as the Let's Encrypt account email. |
 | `TRAEFIK_DASHBOARD_AUTH` | Traefik dashboard | **Optional**, blank means no auth. `user:hash` from `htpasswd -nbB admin 'pass' \| sed -e 's/\$/\$\$/g'` (every `$` doubled for `.env`). |
 | `HOMARR_SECRET_ENCRYPTION_KEY` | Homarr | _(auto)_ `openssl rand -hex 32` |
@@ -447,12 +449,35 @@ under [Tailscale](#tailscaleappsnetworktailscaleyaml).
 ### Public internet (optional)
 
 Use this only for services that need a real public endpoint, such as Plex remote access. Set
-`PUBLIC_DOMAIN` to a hostname that follows your home IP and keep DDNS Updater (profile `network`)
-running. Providers go in `apps/config/ddns-updater/config.json`
+`PUBLIC_DOMAIN` to a hostname in your Cloudflare zone, such as `public.example.tld`, and `CF_ZONE_ID`
+to that zone's ID, then keep DDNS Updater (profile `network`) running. It points both
+`PUBLIC_DOMAIN` and `*.PUBLIC_DOMAIN` at your public IP, using the same `CF_DNS_API_TOKEN` as
+Traefik. Its config is built from those `.env` values in the `CONFIG` variable of
+[`ddns-updater.yaml`](apps/network/ddns-updater.yaml), so no credential lands in a tracked file. To
+use another provider, change the JSON there
 ([format](https://github.com/qdm12/ddns-updater#configuration)). Forward the port on your router
 (Plex needs `32400/tcp`), or let Gangplank (profile `gangplank`) automate UPnP forwards from the
 `gangplank.forward` labels. Plex advertises both its LAN and `PUBLIC_DOMAIN` endpoints through
-`ADVERTISE_IP`. Everything else stays private to the LAN and the tailnet.
+`ADVERTISE_IP`.
+
+A web app can opt in to a public hostname, `<app>.${PUBLIC_DOMAIN}`, served by Traefik's `public`
+entrypoint. Forward WAN `443/tcp` to the host's `TRAEFIK_PUBLIC_PORT` (default `8443`). The
+wildcard record makes every subdomain resolve. No app opts in yet, so the entrypoint answers 404 to
+everything. To expose one, give it a second router next to its LAN one:
+
+```yaml
+traefik.http.routers.<app>.service: <app>
+traefik.http.routers.<app>-public.rule: Host(`<app>.${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}`)
+traefik.http.routers.<app>-public.entrypoints: public
+traefik.http.routers.<app>-public.service: <app>
+```
+
+The first line keeps the LAN router: once a container defines any router, Traefik stops creating its
+default one, and a router without a `rule` falls back to `<app>.${DOMAIN_NAME}`. Only expose apps that
+have their own login. Public routers serve the `${DOMAIN_NAME}` wildcard certificate for now, so
+browsers warn about the name until `PUBLIC_DOMAIN` gets a certificate of its own.
+
+Everything else stays private to the LAN and the tailnet.
 
 ### Pi-hole (optional)
 
@@ -711,6 +736,9 @@ Keeps your Dynamic DNS records up to date with your current public IP address.
 - **Ports:** 8001:8000/tcp (DDNS_UPDATER_PORT), overlay only, see [Host ports](#host-ports)
 - **Profiles:** `ddns-updater`, `network`, `basic`, `default`, `full`
 
+Updates `PUBLIC_DOMAIN` and `*.PUBLIC_DOMAIN` on Cloudflare. Needs `CF_DNS_API_TOKEN`, `CF_ZONE_ID`
+and `PUBLIC_DOMAIN` in `.env`, see [Public internet](#public-internet-optional).
+
 #### [Gangplank](apps/network/gangplank.yaml)
 Docker port forwarder that opens UPnP forwards for the ports you label.
 - **Ports:** host
@@ -767,7 +795,7 @@ sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
 
 #### [Traefik](apps/network/traefik.yaml)
 Reverse proxy and load balancer that fronts every web UI in the stack.
-- **Ports:** 80:80/tcp, 443:443/tcp
+- **Ports:** 80:80/tcp, 443:443/tcp, 8443:8443/tcp (TRAEFIK_PUBLIC_PORT)
 - **Profiles:** `traefik`, `auth`, `default`, `full`
 
 Routes any container with `traefik.enable: true` at `<container>.${DOMAIN_NAME}`, see
@@ -799,8 +827,12 @@ so Homepage's Traefik widget can read the API at `http://traefik` from the Docke
 allowlist (`127.0.0.1/32,172.16.0.0/12`) keeps LAN clients from reaching it with a spoofed `Host`
 header, so it stays unauthenticated without exposing the API.
 
+A third entrypoint, `public` on port 8443, carries traffic from the internet. Only routers that set
+`entrypoints: public` listen on it, so forwarding WAN 443 there cannot reach a LAN-only app, even with
+a spoofed `Host` header. See [Public internet](#public-internet-optional).
+
 The shared `middlewares-secure-headers` middleware (nosniff, frame-options, referrer and permissions
-policy) is applied to every proxied route through the `websecure` entrypoint. Edit
+policy) is applied to every proxied route through the `websecure` and `public` entrypoints. Edit
 [`apps/config/traefik/rules/middlewares.yml`](apps/config/traefik/rules/middlewares.yml) to change
 it.
 

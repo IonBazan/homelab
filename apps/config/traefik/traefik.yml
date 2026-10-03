@@ -13,6 +13,12 @@ entryPoints:
     http:
       tls: {}
     asDefault: true
+  # Only routers that opt in with `entrypoints: public` listen here. Forward WAN 443 to this
+  # port rather than to :443, so a spoofed Host header cannot reach a LAN-only router.
+  public:
+    address: ":8443"
+    http:
+      tls: {}
 
 api:
   dashboard: true

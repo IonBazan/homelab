@@ -192,6 +192,7 @@ if [ -t 0 ]; then
   prompt_value BACKUP_DIR       "Backup root (one subdirectory per app)"
   prompt_value CF_API_EMAIL     "Let's Encrypt / Cloudflare email"
   prompt_value CF_DNS_API_TOKEN "Cloudflare DNS API token"
+  prompt_value CF_ZONE_ID       "Cloudflare zone ID"
   prompt_value TAILSCALE_TOKEN  "Tailscale auth key"
 fi
 
@@ -274,6 +275,7 @@ MANUAL=(
   "PLEX_CLAIM|https://www.plex.tv/claim (first run only)"
   "TAILSCALE_TOKEN|Tailscale admin > Settings > Keys"
   "CF_DNS_API_TOKEN|Cloudflare > API Tokens > Edit zone DNS"
+  "CF_ZONE_ID|Cloudflare > your domain > Overview > Zone ID"
   "CF_API_EMAIL|your Cloudflare account email"
   "PLEX_TOKEN|Homepage widget - X-Plex-Token"
   "JELLYFIN_API_KEY|Homepage widget - Jellyfin > Dashboard > API Keys"
