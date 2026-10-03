@@ -9,6 +9,7 @@ services:
       PGID: ${PGID}
       TZ: ${TZ}
       SONARR__AUTH__APIKEY: ${SONARR_API_KEY:-}
+      SONARR__AUTH__METHOD: ${EXTERNAL_AUTH:+External}
     volumes:
       - sonarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/sonarr:/config/Backups

@@ -5,6 +5,7 @@
 #   * fill every blank secret that can be random - API keys, encryption/JWT
 #     secrets, qBittorrent + Pi-hole + Tracearr DB passwords
 #   * detect host values - LAN IP, LAN CIDR, timezone, PUID/PGID
+#   * set EXTERNAL_AUTH=true when the auth, tinyauth or full profile is selected
 #   * prompt for the values only you know (domain, media dir, Cloudflare,
 #     Tailscale) when run from a terminal
 #   * create one backup directory per app under BACKUP_DIR
@@ -152,6 +153,20 @@ elif [ "$(id -u)" != "0" ]; then
 else
   echo "  PUID/PGID                skipped (running as root)"
 fi
+
+echo
+echo "Login:"
+case ",$(raw_value COMPOSE_PROFILES "$ENV_FILE")," in
+  *,auth,*|*,tinyauth,*|*,full,*)
+    if env_has_value EXTERNAL_AUTH "$ENV_FILE"; then
+      printf '  %-24s kept (already set)\n' EXTERNAL_AUTH
+    else
+      set_env EXTERNAL_AUTH true "$ENV_FILE"
+      printf '  %-24s true (Tinyauth is in the profiles)\n' EXTERNAL_AUTH
+    fi
+    ;;
+  *) printf '  %-24s left blank (no Tinyauth in the profiles)\n' EXTERNAL_AUTH ;;
+esac
 
 # prompt_value KEY QUESTION -> ask only while the value is empty or still the
 # .env.example placeholder; Enter keeps the current value

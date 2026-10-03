@@ -142,7 +142,8 @@ cd homelab
 secrets, and the qBittorrent, Pi-hole and Tracearr database passwords). It sets a blank
 `COMPOSE_PROFILES` to `default`, since an empty value starts nothing. It detects host values from
 the default-route interface (`PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`, `PUID`,
-`PGID`), scaffolds `.env.gluetun` from the template, and prints the handful of tokens you still
+`PGID`), sets `EXTERNAL_AUTH=true` when `COMPOSE_PROFILES` includes `auth`, `tinyauth` or `full`,
+scaffolds `.env.gluetun` from the template, and prints the handful of tokens you still
 have to fetch yourself. It never
 overwrites a value you have edited (host values overwrite only the shipped placeholder), so it is
 safe to re-run.
@@ -420,7 +421,15 @@ its API key there:
 
 The rules are `tinyauth.apps.*` labels on each app. Traefik adds the Tinyauth middleware through
 routers defined on the Tinyauth container, so without this profile, or while Tinyauth is down, the
-apps are served as before behind their own login. Keep that login enabled.
+apps are served as before behind their own login.
+
+Set `EXTERNAL_AUTH=true` in `.env` while Tinyauth is running. Sonarr, Radarr and Prowlarr then
+use the `External` login method and stop asking for a second login. Blank it when you drop the
+`auth` profile and set their login method back in each app's UI (**Settings → General →
+Authentication**); the variable only sets `External`, it does not restore the previous method.
+While it is set, the apps and any host port from the ports overlay have no login of their own.
+Bazarr has no external method and keeps its own login. qBittorrent is not behind Tinyauth and
+keeps its own login.
 
 To check that the API bypass works, call an API path without a key. The app itself should answer
 `401`, with no redirect to Pocket ID, and the same request with the key should return `200`:

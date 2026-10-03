@@ -9,6 +9,7 @@ services:
       PGID: ${PGID}
       TZ: ${TZ}
       PROWLARR__AUTH__APIKEY: ${PROWLARR_API_KEY:-}
+      PROWLARR__AUTH__METHOD: ${EXTERNAL_AUTH:+External}
     volumes:
       - prowlarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/prowlarr:/config/Backups

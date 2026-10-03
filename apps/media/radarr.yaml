@@ -9,6 +9,7 @@ services:
       PGID: ${PGID}
       TZ: ${TZ}
       RADARR__AUTH__APIKEY: ${RADARR_API_KEY:-}
+      RADARR__AUTH__METHOD: ${EXTERNAL_AUTH:+External}
     volumes:
       - radarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/radarr:/config/Backups
