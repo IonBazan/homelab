@@ -9,7 +9,7 @@ services:
       PGID: ${PGID}
       TZ: ${TZ}
       PROWLARR__AUTH__APIKEY: ${PROWLARR_API_KEY:-}
-      PROWLARR__AUTH__METHOD: ${EXTERNAL_AUTH:+External}
+      PROWLARR__AUTH__METHOD: ${TINYAUTH_ENABLED:+External}
     volumes:
       - prowlarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/prowlarr:/config/Backups
@@ -24,6 +24,7 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.prowlarr.loadbalancer.server.port: 9696
+      traefik.http.routers.prowlarr.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
       tinyauth.apps.prowlarr.config.domain: prowlarr.${DOMAIN_NAME}
       tinyauth.apps.prowlarr.path.allow: ^/(api|ping|\d+/(api|download))
       homepage.group: Media Management

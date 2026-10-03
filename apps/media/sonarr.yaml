@@ -9,7 +9,7 @@ services:
       PGID: ${PGID}
       TZ: ${TZ}
       SONARR__AUTH__APIKEY: ${SONARR_API_KEY:-}
-      SONARR__AUTH__METHOD: ${EXTERNAL_AUTH:+External}
+      SONARR__AUTH__METHOD: ${TINYAUTH_ENABLED:+External}
     volumes:
       - sonarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/sonarr:/config/Backups
@@ -29,6 +29,7 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.sonarr.loadbalancer.server.port: 8989
+      traefik.http.routers.sonarr.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
       tinyauth.apps.sonarr.config.domain: sonarr.${DOMAIN_NAME}
       tinyauth.apps.sonarr.path.allow: ^/(api|feed|ping)
       homepage.group: Media Management
