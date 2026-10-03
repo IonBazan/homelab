@@ -28,7 +28,8 @@ diff against their neighbours.
 - `setup-env.sh` — first-run bootstrap: creates `.env` from the template, generates the random
   secrets, detects host values (LAN IP/CIDR, timezone, PUID/PGID), scaffolds `.env.gluetun`.
   Idempotent. Keep it in sync when you add variables (see "Adding an app").
-- `README.md` — a per-service catalogue with ports and profiles, kept in sync with `apps/`.
+- `README.md` — a per-service catalogue with ports and profiles, kept in sync with `apps/`, and
+  the Mermaid architecture diagram under "Architecture" (see "Architecture diagram").
 - `tests/validate-compose.sh`: renders the stack without `.env` (with and without the ports overlay)
   and checks which services each profile starts.
 
@@ -125,6 +126,33 @@ it. `docker compose run --rm <app>` still works, because naming a service enable
    it to the minimum that works here: drop settings that only restate image defaults, and keep
    the ones that are load-bearing.
 6. Add `check` lines for the app's profiles to `tests/validate-compose.sh` and run it.
+7. Add the app to the README architecture diagram (see below).
+
+## Architecture diagram
+
+The Mermaid chart under "Architecture" in the README draws every service in `docker-compose.yaml`.
+Update it in the same change whenever you add, remove or rename a service, or change how services
+connect (`depends_on`, `network_mode: service:gluetun`, Tinyauth middleware, Pocket ID/OIDC,
+Cloudflare, Tailscale).
+
+- Put the app in its category group, as an image node with its [selfh.st](https://selfh.st/icons/)
+  icon (`https://raw.githubusercontent.com/selfhst/icons/main/png/<name>.png`). GitHub's Mermaid
+  viewer only loads images from a few hosts such as `raw.githubusercontent.com`, and raw serves SVG
+  as plain text, so other CDNs or SVG icons break the whole chart. An app without an icon is a plain
+  text node.
+- Traefik and Auth arrows point at whole groups, not at single apps. Draw an app-to-app arrow only
+  for a real relationship, with a short label.
+- The chart uses Mermaid's default (dagre) layout, because GitHub's viewer does not ship ELK. Two
+  things drive it:
+  - Edge direction sets the rows: a target always lands below its source. Write an edge from the
+    upper node, as in `gluetun -.-|"via VPN"| qbit`; drawn the other way it drags Gluetun to the
+    bottom of the chart.
+  - A group without `direction` runs opposite to its parent, so in a `TB` chart it runs `LR` and
+    unlinked apps stack in a column. Give a group `direction TB` to put unlinked apps in one row
+    (Automation, Tools) or a linked pair one above the other (Open WebUI and Ollama).
+- Two linked apps that must sit side by side (Tinyauth and Pocket ID) go in an unbordered inner
+  subgraph with `direction LR`, with the outside edges pointing at the outer group.
+- Render the chart with GitHub's Mermaid version and look at it before committing.
 
 ## Verifying
 

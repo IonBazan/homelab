@@ -53,6 +53,124 @@ Copy the files to any machine, change the `.env` parameters and run `docker comp
 are no makefiles, no Ansible and no bash scripts to maintain. It works on most platforms and
 architectures out of the box.
 
+## Architecture
+
+Cloudflare resolves `${DOMAIN_NAME}` and `*.${DOMAIN_NAME}` to the server's LAN IP. At home, every
+web UI is reached through Traefik at `https://<container>.${DOMAIN_NAME}`; away from home,
+Tailscale's subnet route reaches the same address. Traefik gets its certificates through
+Cloudflare's DNS challenge. DDNS Updater keeps a separate hostname, `PUBLIC_DOMAIN`, pointed at the
+home's public IP; only Plex uses it, for remote access. With `TINYAUTH_ENABLED` set, Tinyauth puts a
+Pocket ID login in front of the *arr apps, and qBittorrent shares Gluetun's network so its traffic
+leaves through the VPN. Icons come from [selfh.st/icons](https://selfh.st/icons/).
+
+```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 30
+    rankSpacing: 40
+---
+flowchart TB
+    you(["👤 Browser or mobile app"])
+    internet(("🌐"))
+    cloudflare@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/cloudflare.png", label: "Cloudflare", pos: "b", w: 40, h: 40, constraint: "on" }
+
+    subgraph net["Network"]
+        direction LR
+        tailscale@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/tailscale.png", label: "Tailscale", pos: "b", w: 32, h: 32, constraint: "on" }
+        gluetun@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/gluetun.png", label: "Gluetun", pos: "b", w: 32, h: 32, constraint: "on" }
+        ddns@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/ddns-updater.png", label: "DDNS Updater", pos: "b", w: 32, h: 32, constraint: "on" }
+        gangplank["Gangplank"]
+        traefik@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/traefik.png", label: "Traefik", pos: "b", w: 32, h: 32, constraint: "on" }
+        pihole@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/pi-hole.png", label: "Pi-hole", pos: "b", w: 32, h: 32, constraint: "on" }
+    end
+
+    subgraph auth["Auth"]
+        subgraph authrow[" "]
+        direction LR
+        tinyauth@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/tinyauth.png", label: "Tinyauth", pos: "b", w: 40, h: 40, constraint: "on" }
+        pocketid@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/pocket-id.png", label: "Pocket ID", pos: "b", w: 40, h: 40, constraint: "on" }
+        tinyauth <-->|"login"| pocketid
+        end
+    end
+
+    subgraph ai["AI"]
+        direction TB
+        openwebui@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/open-webui.png", label: "Open WebUI", pos: "b", w: 40, h: 40, constraint: "on" }
+        ollama@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/ollama.png", label: "Ollama", pos: "b", w: 40, h: 40, constraint: "on" }
+        openwebui --> ollama
+    end
+
+    subgraph tools["Tools"]
+        direction TB
+        homepage@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/homepage.png", label: "Homepage", pos: "b", w: 40, h: 40, constraint: "on" }
+        homarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/homarr.png", label: "Homarr", pos: "b", w: 40, h: 40, constraint: "on" }
+        glances@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/glances.png", label: "Glances", pos: "b", w: 40, h: 40, constraint: "on" }
+    end
+
+    subgraph media["Media"]
+        direction TB
+        subgraph arr["Arr apps"]
+            direction TB
+            radarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/radarr.png", label: "Radarr", pos: "b", w: 40, h: 40, constraint: "on" }
+            sonarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/sonarr.png", label: "Sonarr", pos: "b", w: 40, h: 40, constraint: "on" }
+            prowlarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/prowlarr.png", label: "Prowlarr", pos: "b", w: 40, h: 40, constraint: "on" }
+            bazarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/bazarr.png", label: "Bazarr", pos: "b", w: 40, h: 40, constraint: "on" }
+            configarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/configarr.png", label: "Configarr", pos: "b", w: 40, h: 40, constraint: "on" }
+        end
+        qbit@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/qbittorrent.png", label: "qBittorrent", pos: "b", w: 40, h: 40, constraint: "on" }
+        subgraph servers["Media servers"]
+            direction TB
+            plex@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/plex.png", label: "Plex", pos: "b", w: 40, h: 40, constraint: "on" }
+            jellyfin@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/jellyfin.png", label: "Jellyfin", pos: "b", w: 40, h: 40, constraint: "on" }
+        end
+        subgraph mtools["Media tools"]
+            direction TB
+            seerr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/seerr.png", label: "Seerr", pos: "b", w: 40, h: 40, constraint: "on" }
+            tracearr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/tracearr.png", label: "Tracearr", pos: "b", w: 40, h: 40, constraint: "on" }
+        end
+    end
+
+    subgraph auto["Automation"]
+        direction TB
+        homeassistant@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/home-assistant.png", label: "Home Assistant", pos: "b", w: 40, h: 40, constraint: "on" }
+        homebridge@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/homebridge.png", label: "Homebridge", pos: "b", w: 40, h: 40, constraint: "on" }
+    end
+
+    you -.->|"DNS lookup, LAN IP"| cloudflare
+    you -->|"HTTPS at home"| traefik
+    you -->|"away from home"| internet
+    internet -->|"tailnet"| tailscale
+    tailscale -->|"subnet route"| traefik
+    internet ---|"VPN tunnel"| gluetun
+    internet --- cloudflare
+    cloudflare ---|"public IP for Plex"| ddns
+    cloudflare ---|"ACME DNS challenge"| traefik
+    internet ---|"port forwarding"| gangplank
+
+    configarr -->|"configures"| radarr & sonarr & prowlarr
+    tracearr -->|"playback stats"| servers
+    seerr -->|"requests"| arr
+
+    traefik --> auth
+    auth -->|"Tinyauth protects"| arr
+    auth -->|"Pocket ID OIDC"| ai
+    auth -->|"Pocket ID OIDC"| tools
+
+    arr -->|"sends downloads"| qbit
+    gluetun -.-|"via VPN"| qbit
+
+    traefik --> ai
+    traefik --> tools
+    traefik --> media
+    traefik --> auto
+
+    classDef group fill:none,stroke:#888,stroke-width:1.5px,stroke-dasharray:4 4
+    classDef bare fill:none,stroke:none
+    class authrow bare
+    class net,auth,media,arr,servers,mtools,ai,auto,tools group
+```
+
 ## Profiles
 
 Set `COMPOSE_PROFILES` in `.env` to a comma-separated list of the
