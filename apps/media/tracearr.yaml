@@ -32,6 +32,8 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.tracearr.loadbalancer.server.port: 3000
+      traefik.http.routers.tracearr.entrypoints: websecure,public
+      homelab.public: true
       homepage.group: Media Management
       homepage.name: Tracearr
       homepage.icon: mdi-chart-timeline-variant

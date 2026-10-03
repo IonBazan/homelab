@@ -101,6 +101,9 @@ it. `docker compose run --rm <app>` still works, because naming a service enable
   `${DOMAIN_NAME}`, so a plain `traefik.http.services.<app>.loadbalancer.server.port` is usually
   all the extra configuration needed.
 - `gangplank.forward: "<port>/<proto>"` marks ports that should be forwarded on the router.
+- `homelab.public: true` plus `traefik.http.routers.<app>.entrypoints: websecure,public` also
+  serves the app at `<app>.${PUBLIC_DOMAIN}` from the internet. Only add it to an app with its own
+  login, and only when asked.
 
 ### Secrets and environment
 

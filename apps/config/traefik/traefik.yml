@@ -25,7 +25,9 @@ api:
 
 providers:
   docker:
-    defaultRule: "Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `DOMAIN_NAME` }}`)"
+    # `homelab.public: true` also matches <name>.${PUBLIC_DOMAIN}; the app must add the `public`
+    # entrypoint to its router for that host to be reachable from outside.
+    defaultRule: "Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `DOMAIN_NAME` }}`){{ if eq (index .Labels `homelab.public`) `true` }} || Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `PUBLIC_DOMAIN` }}`){{ end }}"
     exposedByDefault: false
     network: "traefik"
   file:

@@ -59,10 +59,10 @@ Cloudflare resolves `${DOMAIN_NAME}` and `*.${DOMAIN_NAME}` to the server's LAN 
 web UI is reached through Traefik at `https://<container>.${DOMAIN_NAME}`; away from home,
 Tailscale's subnet route reaches the same address. Traefik gets its certificates through
 Cloudflare's DNS challenge. DDNS Updater keeps a separate Cloudflare hostname, `PUBLIC_DOMAIN`,
-pointed at the home's public IP, for Plex remote access and any app that opts in to a public
-hostname. With `TINYAUTH_ENABLED` set, Tinyauth puts a Pocket ID login in front of the *arr apps,
-and qBittorrent shares Gluetun's network so its traffic leaves through the VPN. Icons come from
-[selfh.st/icons](https://selfh.st/icons/).
+pointed at the home's public IP, for Plex remote access and the apps that opt in to a public
+hostname (Tracearr). With `TINYAUTH_ENABLED` set, Tinyauth puts a Pocket ID login in front of the
+*arr apps, and qBittorrent shares Gluetun's network so its traffic leaves through the VPN. Icons
+come from [selfh.st/icons](https://selfh.st/icons/).
 
 ```mermaid
 ---
@@ -143,6 +143,7 @@ flowchart TB
     you -->|"away from home"| internet
     internet -->|"tailnet"| tailscale
     tailscale -->|"subnet route"| traefik
+    internet -->|"public apps, :8443"| traefik
     internet ---|"VPN tunnel"| gluetun
     internet --- cloudflare
     cloudflare ---|"PUBLIC_DOMAIN, public IP"| ddns
@@ -462,18 +463,17 @@ use another provider, change the JSON there
 
 A web app can opt in to a public hostname, `<app>.${PUBLIC_DOMAIN}`, served by Traefik's `public`
 entrypoint. Forward WAN `443/tcp` to the host's `TRAEFIK_PUBLIC_PORT` (default `8443`). The
-wildcard record makes every subdomain resolve. No app opts in yet, so the entrypoint answers 404 to
-everything. To expose one, give it a second router next to its LAN one:
+wildcard record makes every subdomain resolve. Tracearr is the only app that opts in. To expose
+another, add two labels:
 
 ```yaml
-traefik.http.routers.<app>.service: <app>
-traefik.http.routers.<app>-public.rule: Host(`<app>.${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}`)
-traefik.http.routers.<app>-public.entrypoints: public
-traefik.http.routers.<app>-public.service: <app>
+traefik.http.routers.<app>.entrypoints: websecure,public
+homelab.public: true
 ```
 
-The first line keeps the LAN router: once a container defines any router, Traefik stops creating its
-default one, and a router without a `rule` falls back to `<app>.${DOMAIN_NAME}`. Only expose apps that
+`homelab.public` makes Traefik's default rule match `<app>.${PUBLIC_DOMAIN}` as well as
+`<app>.${DOMAIN_NAME}`, and the entrypoints label puts that router on the `public` entrypoint too.
+Apps without the label keep the LAN-only rule and never listen on `public`. Only expose apps that
 have their own login.
 
 Public hostnames get their own wildcard certificate, for `${PUBLIC_DOMAIN}` and `*.${PUBLIC_DOMAIN}`,
@@ -679,6 +679,7 @@ TimescaleDB and Redis containers on a private `tracearr` network.
 - **Profiles:** `tracearr`, `media`, `basic`, `default`, `full`
 
 Requires `TRACEARR_JWT_SECRET` and `TRACEARR_COOKIE_SECRET` in `.env` (`openssl rand -hex 32` each).
+Also public at `tracearr.${PUBLIC_DOMAIN}`, see [Public internet](#public-internet-optional).
 
 #### [Seerr](apps/media/seerr.yaml)
 Request manager for Plex and Jellyfin. Users search for a film or show, and approved requests are
