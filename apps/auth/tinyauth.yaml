@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
   tinyauth:
-    image: ghcr.io/tinyauthapp/tinyauth:v5
+    image: ghcr.io/tinyauthapp/tinyauth:v5-distroless
     container_name: tinyauth
     profiles: ["tinyauth", "auth", "full"]
     environment:
@@ -9,7 +9,7 @@ services:
       TINYAUTH_AUTH_SECURECOOKIE: true
       TINYAUTH_OAUTH_AUTOREDIRECT: pocketid
       TINYAUTH_OAUTH_PROVIDERS_POCKETID_NAME: Pocket ID
-      TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTID: ${TINYAUTH_OIDC_CLIENT_ID:-}
+      TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTID: ${TINYAUTH_OIDC_CLIENT_ID:-tinyauth}
       TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTSECRET: ${TINYAUTH_OIDC_CLIENT_SECRET:-}
       TINYAUTH_OAUTH_PROVIDERS_POCKETID_AUTHURL: https://id.${DOMAIN_NAME}/authorize
       TINYAUTH_OAUTH_PROVIDERS_POCKETID_TOKENURL: https://id.${DOMAIN_NAME}/api/oidc/token

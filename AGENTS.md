@@ -25,9 +25,12 @@ diff against their neighbours.
   rules, pihole entrypoint). Anything a container reads from disk lives here, not in `/data`.
 - `.env.example`, `.env.gluetun.example` — tracked templates. The real `.env`, `.env.gluetun`
   and the provider-specific `.env.gluetun.*` files are gitignored and hold the actual secrets.
-- `setup-env.sh` — first-run bootstrap: creates `.env` from the template, generates the random
+- `scripts/setup-env.sh` — first-run bootstrap: creates `.env` from the template, generates the random
   secrets, detects host values (LAN IP/CIDR, timezone, PUID/PGID), scaffolds `.env.gluetun`.
   Idempotent. Keep it in sync when you add variables (see "Adding an app").
+- `scripts/pocket-id-clients.sh` — run on the server once Pocket ID is up: registers the OIDC clients in
+  Pocket ID with the IDs and secrets from `.env`. An app that signs in through Pocket ID gets a
+  `register` line here and a generated secret in `scripts/setup-env.sh`.
 - `README.md` — a per-service catalogue with ports and profiles, kept in sync with `apps/`, and
   the Mermaid architecture diagram under "Architecture" (see "Architecture diagram").
 - `tests/validate-compose.sh`: renders the stack without `.env` (with and without the ports overlay)
@@ -51,11 +54,11 @@ diff against their neighbours.
   its default backup folder. `BACKUP_DIR` is the single backup root; the host OS syncs it one way
   to a cloud provider, so nothing in the stack uploads backups and no backup container is needed.
   When adding such an app:
-  - add `<app>` to the backup directory loop in `setup-env.sh` and a row to the table under
+  - add `<app>` to the backup directory loop in `scripts/setup-env.sh` and a row to the table under
     "7. Backups" in the README;
   - check which uid the image writes as. `PUID`-aware images and root work with the directory
-    `setup-env.sh` creates; a fixed non-root uid (Tracearr's 1001) needs a `sudo chown -R <uid>`
-    step in `setup-env.sh` and the README, like Tracearr's.
+    `scripts/setup-env.sh` creates; a fixed non-root uid (Tracearr's 1001) needs a `sudo chown -R <uid>`
+    step in `scripts/setup-env.sh` and the README, like Tracearr's.
 
 ### Profiles
 
@@ -121,7 +124,7 @@ it. `docker compose run --rm <app>` still works, because naming a service enable
    `ports:` block to `docker-compose.ports.yaml` if the app has a web UI.
 3. Add any new variables to `.env.example`. If a variable is a random secret (API key,
    encryption/JWT secret, password) or derivable from the host (an IP, CIDR, id, timezone),
-   also wire it into `setup-env.sh` — the `GEN` array for random values, the `fill_detected`
+   also wire it into `scripts/setup-env.sh` — the `GEN` array for random values, the `fill_detected`
    block for host values — so a fresh `.env` comes up ready to launch.
 4. Add a `#### [App](apps/<category>/<app>.yaml)` entry to the README service list, with the
    one-line description, ports and profiles.

@@ -16,7 +16,7 @@
 # Tokens that are still missing are listed at the end.
 set -euo pipefail
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 command -v openssl >/dev/null || { echo "openssl is required" >&2; exit 1; }
 
@@ -202,6 +202,8 @@ GEN=(
   "TRACEARR_JWT_SECRET           rand_hex 32"
   "TRACEARR_COOKIE_SECRET        rand_hex 32"
   "POCKET_ID_ENCRYPTION_KEY      rand_hex 32"
+  "POCKET_ID_STATIC_API_KEY      rand_hex 32"
+  "TINYAUTH_OIDC_CLIENT_SECRET   rand_hex 32"
   "SONARR_API_KEY                rand_hex 16"
   "RADARR_API_KEY                rand_hex 16"
   "PROWLARR_API_KEY              rand_hex 16"
@@ -281,8 +283,6 @@ MANUAL=(
   "JELLYFIN_API_KEY|Homepage widget - Jellyfin > Dashboard > API Keys"
   "HOMEASSISTANT_TOKEN|Homepage widget - HA long-lived token"
   "TRAEFIK_DASHBOARD_AUTH|optional - htpasswd hash, \$ doubled to \$\$"
-  "TINYAUTH_OIDC_CLIENT_ID|profile auth - Pocket ID > OIDC Clients (see README)"
-  "TINYAUTH_OIDC_CLIENT_SECRET|profile auth - Pocket ID > OIDC Clients (see README)"
 )
 any=0
 for row in "${MANUAL[@]}"; do
@@ -294,3 +294,4 @@ done
 echo
 echo "Review the defaults the script can't guess: DOMAIN_NAME  MEDIA_DIR  COMPOSE_PROFILES  COMPOSE_FILE"
 echo "Also edit .env.gluetun: uncomment one provider block and fill the credentials."
+echo "With the auth profile, run scripts/pocket-id-clients.sh once Pocket ID is up to register its OIDC clients."

@@ -11,6 +11,7 @@ services:
       APP_URL: https://id.${DOMAIN_NAME}
       TRUST_PROXY: true
       ENCRYPTION_KEY: ${POCKET_ID_ENCRYPTION_KEY}
+      STATIC_API_KEY: ${POCKET_ID_STATIC_API_KEY:-}
     volumes:
       - pocket_id_data:/app/data
     healthcheck:

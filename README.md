@@ -254,10 +254,10 @@ The stack runs on a UGREEN DXP2800 NAS:
 ```bash
 git clone git@github.com:IonBazan/homelab.git
 cd homelab
-./setup-env.sh
+scripts/setup-env.sh
 ```
 
-`setup-env.sh` creates `.env` from `.env.example` and generates every secret that can be random (the
+`scripts/setup-env.sh` creates `.env` from `.env.example` and generates every secret that can be random (the
 `*_API_KEY`s, `HOMARR_SECRET_ENCRYPTION_KEY`, `POCKET_ID_ENCRYPTION_KEY`, the two `TRACEARR_*`
 secrets, and the qBittorrent, Pi-hole and Tracearr database passwords). It sets a blank
 `COMPOSE_PROFILES` to `default`, since an empty value starts nothing. It detects host values from
@@ -282,14 +282,14 @@ secrets. `.env.example` and `.env.gluetun.example` are the tracked templates.
 ### 2. Fill in `.env`
 
 Work top to bottom. Anything left commented is optional and shown at its default. Rows that
-`setup-env.sh` already filled are marked _(auto)_.
+`scripts/setup-env.sh` already filled are marked _(auto)_.
 
 | Variable | Needed for | Where to get / how to set it |
 |---|---|---|
 | `DOMAIN_NAME` | Traefik, DNS | The domain you route services under, e.g. `homelab.example.com`. Every service is published at `<name>.${DOMAIN_NAME}`. |
 | `TZ` | all | _(auto)_ IANA name, e.g. `Europe/Warsaw` ([list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). |
 | `PUID` / `PGID` | media apps | _(auto)_ `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
-| `BACKUP_DIR` | app backups | **Required.** Absolute path that collects each app's scheduled backups in its own subdirectory, described under [Backups](#7-backups). `setup-env.sh` creates the subdirectories. |
+| `BACKUP_DIR` | app backups | **Required.** Absolute path that collects each app's scheduled backups in its own subdirectory, described under [Backups](#7-backups). `scripts/setup-env.sh` creates the subdirectories. |
 | `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
 | `COMPOSE_PROFILES` | service selection | _(auto if blank)_ Comma-separated (see [Profiles](#profiles)). `default` is `basic` plus Traefik. Add single profiles to a group, e.g. `default,ai`. |
 | `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host, described under [Host ports](#host-ports). Unset means Traefik and Tailscale only. |
@@ -306,13 +306,14 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | _(auto)_ `openssl rand -hex 32` each |
 | `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | _(auto)_ `openssl rand -hex 16` each. Leave blank to let each app self-generate, in which case Configarr will not run. |
 | `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every container start and wires the Homepage widget, described under [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank means you set it in the UI. |
-| `TINYAUTH_OIDC_CLIENT_ID` / `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | Only with the `auth` or `tinyauth` profile. An OIDC client in Pocket ID, described under [Tinyauth](#tinyauthappsauthtinyauthyaml). |
+| `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | _(auto)_ Only with the `auth` or `tinyauth` profile. Registered in Pocket ID for you, described under [Tinyauth](#tinyauthappsauthtinyauthyaml). `TINYAUTH_OIDC_CLIENT_ID` is optional and defaults to `tinyauth`. |
+| `POCKET_ID_STATIC_API_KEY` | Pocket ID client setup | _(auto)_ Admin API key `scripts/pocket-id-clients.sh` uses to register clients. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
 
 ### 3. Fill in `.env.gluetun` (only with the `vpn` profile)
 
-`setup-env.sh` already created `.env.gluetun.nordvpn`, symlinked `.env.gluetun` to it, and set
+`scripts/setup-env.sh` already created `.env.gluetun.nordvpn`, symlinked `.env.gluetun` to it, and set
 `FIREWALL_OUTBOUND_SUBNETS` from `PHYSICAL_SERVER_NETWORK`. Edit that file and uncomment **one**
 provider block. To use WireGuard instead, point the symlink at `.env.gluetun.wireguard`.
 
@@ -338,7 +339,7 @@ I keep everything in the home directory of the user that runs the stack:
 |   `-- Downloads/      qBittorrent save path, hardlinked into Movies/Shows
 `-- Backups/            BACKUP_DIR, synced one way to the cloud
     |-- radarr/         one subfolder per app with built-in backups,
-    |-- sonarr/         created by setup-env.sh (see Backups below)
+    |-- sonarr/         created by scripts/setup-env.sh (see Backups below)
     |-- prowlarr/
     |-- bazarr/
     |-- tracearr/
@@ -403,7 +404,7 @@ them. Tracearr runs as uid 1001 and needs its directory to belong to that uid, a
 sudo chown -R 1001 /path/to/backups/tracearr   # same path as BACKUP_DIR
 ```
 
-`setup-env.sh` creates the subdirectories as your user and prints that command for Tracearr (or
+`scripts/setup-env.sh` creates the subdirectories as your user and prints that command for Tracearr (or
 runs it under `sudo`). If an app started before its directory existed, Docker created it as
 `root:root` and the app gets "Permission denied" writing backups. Check with `ls -ld` and hand it
 back to your user, or to uid 1001 for Tracearr:
@@ -529,8 +530,16 @@ out when Pocket ID is down.
 Open-WebUI links a Pocket ID login to an existing account with the same email. Homarr creates a
 separate user for it.
 
-Tinyauth works differently. Pocket ID is its only login, and its setup is described under
-[Tinyauth](#tinyauthappsauthtinyauthyaml).
+Tinyauth works differently. Pocket ID is its only login, and its client is registered
+automatically, as described under [Tinyauth](#tinyauthappsauthtinyauthyaml).
+
+[`scripts/pocket-id-clients.sh`](scripts/pocket-id-clients.sh) runs on the server, next to `scripts/setup-env.sh`, and
+needs only `curl`. It reads `.env`, then calls `https://id.${DOMAIN_NAME}` with
+`POCKET_ID_STATIC_API_KEY` to create each client with the ID and secret from `.env`. Re-running it
+leaves an existing client alone and only adds its `.env` secret if Pocket ID does not have it yet,
+so name, callback and group changes made in the UI stick. To add a client, add a `register` line
+to the script. The static key has full admin access to Pocket ID, so treat it like
+`POCKET_ID_ENCRYPTION_KEY`.
 
 #### [Tinyauth](apps/auth/tinyauth.yaml)
 Forward-auth login page that Traefik puts in front of Sonarr, Radarr, Prowlarr and Bazarr.
@@ -545,16 +554,15 @@ To set it up:
 
 1. Add `auth` to `COMPOSE_PROFILES`, or use `full`. Both start Traefik, Pocket ID and Tinyauth. If
    you add only `tinyauth`, Traefik has to come from another profile such as `default`.
-2. Start Pocket ID with `docker compose up -d pocket-id` and create the first admin account at
-   `https://id.${DOMAIN_NAME}/setup`, if you have not already.
-3. In Pocket ID, open **OIDC Clients → Add OIDC Client**. Name it `Tinyauth`, set the callback URL to
-   `https://tinyauth.${DOMAIN_NAME}/api/oauth/callback/pocketid` and leave **Public Client** off.
-   To let only some users in, pick a group under **Allowed User Groups**. Otherwise every Pocket ID
-   user can sign in.
-4. Copy the client ID and secret into `TINYAUTH_OIDC_CLIENT_ID` and `TINYAUTH_OIDC_CLIENT_SECRET`
-   in `.env`.
-5. Run `docker compose up -d`.
-6. Open `https://sonarr.${DOMAIN_NAME}`. You should land on Pocket ID, and after signing in you
+2. Run `scripts/setup-env.sh`, or set `POCKET_ID_STATIC_API_KEY` and `TINYAUTH_OIDC_CLIENT_SECRET` in
+   `.env` yourself (`openssl rand -hex 32` each).
+3. Run `docker compose up -d`, then `scripts/pocket-id-clients.sh` once Pocket ID answers at
+   `https://id.${DOMAIN_NAME}`. It registers the `tinyauth` client with the callback
+   `https://tinyauth.${DOMAIN_NAME}/api/oauth/callback/pocketid`.
+4. Create the first admin account at `https://id.${DOMAIN_NAME}/setup`, if you have not already.
+   To let only some users in, open the Tinyauth client under **OIDC Clients** and pick a group
+   under **Allowed User Groups**. Otherwise every Pocket ID user can sign in.
+5. Open `https://sonarr.${DOMAIN_NAME}`. You should land on Pocket ID, and after signing in you
    are sent back to Sonarr.
 
 Browsers have to sign in before they reach an app's UI. The API paths skip Tinyauth so that mobile
@@ -570,7 +578,7 @@ its API key there:
 The rules are `tinyauth.apps.*` labels on each app.
 
 Set `TINYAUTH_ENABLED=true` in `.env` to put Tinyauth in front of Sonarr, Radarr, Prowlarr and
-Bazarr: each app's Traefik router then uses the `tinyauth` middleware. `setup-env.sh` sets it
+Bazarr: each app's Traefik router then uses the `tinyauth` middleware. `scripts/setup-env.sh` sets it
 when `COMPOSE_PROFILES` includes `auth`, `tinyauth` or `full`. Sonarr, Radarr and Prowlarr also
 switch to the `External` login method and stop asking for a second login. If Tinyauth is not
 running while the flag is set, Traefik rejects the apps' routers and they return 404 instead of
@@ -717,7 +725,7 @@ shared through a YAML anchor, with `CONFIGARR_ENABLE_MERGE=true` set on the cont
 points at `gluetun:8081` because qBittorrent shares gluetun's network namespace. It uses categories
 `tv-sonarr` and `radarr`, and authenticates with `QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD`.
 `update_password: true` re-pushes the password on each run, so it tracks the same `.env` value the
-qBittorrent WebUI login uses. Set `QBITTORRENT_PASSWORD` or run `setup-env.sh`, otherwise the client is
+qBittorrent WebUI login uses. Set `QBITTORRENT_PASSWORD` or run `scripts/setup-env.sh`, otherwise the client is
 created with a blank password and will not connect.
 
 In **Prowlarr** it registers Sonarr and Radarr as applications on `fullSync`, adds the same
