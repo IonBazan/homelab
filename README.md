@@ -81,7 +81,7 @@ flowchart TB
         tailscale@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/tailscale.png", label: "Tailscale", pos: "b", w: 32, h: 32, constraint: "on" }
         gluetun@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/gluetun.png", label: "Gluetun", pos: "b", w: 32, h: 32, constraint: "on" }
         ddns@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/ddns-updater.png", label: "DDNS Updater", pos: "b", w: 32, h: 32, constraint: "on" }
-        gangplank["Gangplank"]
+        gangplank@{ img: "https://raw.githubusercontent.com/IonBazan/gangplank/refs/heads/main/logo.svg", label: "Gangplank", pos: "b", w: 32, h: 32, constraint: "on" }
         traefik@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/traefik.png", label: "Traefik", pos: "b", w: 32, h: 32, constraint: "on" }
         pihole@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/pi-hole.png", label: "Pi-hole", pos: "b", w: 32, h: 32, constraint: "on" }
     end
