@@ -601,6 +601,13 @@ other *arrs, Prowlarr sync and calendar feeds keep working. The app still checks
 
 The rules are `tinyauth.apps.*` labels on each app.
 
+> [!CAUTION]
+> `TINYAUTH_ENABLED` turns off the built-in login of Sonarr, Radarr and Prowlarr. They switch to the
+> `External` method and trust Tinyauth to check who you are. Only set it once Tinyauth and Pocket ID
+> are set up and running. Anything that reaches these apps without going through Tinyauth gets in
+> with no login, including host ports from the ports overlay. The same applies after you clear the
+> flag, until you set each app's login method back.
+
 `TINYAUTH_ENABLED=true` in `.env` turns it on. `scripts/setup-env.sh` sets it when
 `COMPOSE_PROFILES` includes `auth`, `tinyauth` or `full`. The Traefik routers of Sonarr, Radarr,
 Prowlarr, Bazarr, Homepage, Glances, DDNS Updater and the Traefik dashboard then use the `tinyauth`
