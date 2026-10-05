@@ -603,10 +603,11 @@ The rules are `tinyauth.apps.*` labels on each app.
 
 > [!CAUTION]
 > `TINYAUTH_ENABLED` turns off the built-in login of Sonarr, Radarr and Prowlarr. They switch to the
-> `External` method and trust Tinyauth to check who you are. Only set it once Tinyauth and Pocket ID
-> are set up and running. Anything that reaches these apps without going through Tinyauth gets in
-> with no login, including host ports from the ports overlay. The same applies after you clear the
-> flag, until you set each app's login method back.
+> `External` method and trust Tinyauth to check who you are. Set it only together with a profile
+> that runs Tinyauth (`auth`, `tinyauth` or `full`), and remove both together. Anything that reaches
+> these apps without going through Tinyauth gets in with no login, including host ports from the
+> ports overlay. Clearing the flag does not bring the old login back, so set each app's login method
+> back by hand.
 
 `TINYAUTH_ENABLED=true` in `.env` turns it on. `scripts/setup-env.sh` sets it when
 `COMPOSE_PROFILES` includes `auth`, `tinyauth` or `full`. The Traefik routers of Sonarr, Radarr,
