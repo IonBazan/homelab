@@ -178,7 +178,13 @@ case ",$(raw_value COMPOSE_PROFILES "$ENV_FILE")," in
       printf '  %-24s true (Tinyauth is in the profiles)\n' TINYAUTH_ENABLED
     fi
     ;;
-  *) printf '  %-24s left blank (no Tinyauth in the profiles)\n' TINYAUTH_ENABLED ;;
+  *)
+    if env_has_value TINYAUTH_ENABLED "$ENV_FILE"; then
+      printf '  %-24s WARNING: set without a Tinyauth profile, so the *arr apps have no login (see README)\n' TINYAUTH_ENABLED
+    else
+      printf '  %-24s left blank (no Tinyauth in the profiles)\n' TINYAUTH_ENABLED
+    fi
+    ;;
 esac
 # A secret turns on the app's Pocket ID button, so only generate them with Pocket ID
 case ",$(raw_value COMPOSE_PROFILES "$ENV_FILE")," in
@@ -325,6 +331,8 @@ MANUAL=(
   "PLEX_TOKEN|Homepage widget - X-Plex-Token"
   "JELLYFIN_API_KEY|Homepage widget - Jellyfin > Dashboard > API Keys"
   "HOMEASSISTANT_TOKEN|Homepage widget - HA long-lived token"
+  "SEERR_API_KEY|Homepage widget - Seerr > Settings > General > API Key"
+  "TRACEARR_API_KEY|Homepage widget - Tracearr settings > API key"
   "TRAEFIK_DASHBOARD_AUTH|optional - htpasswd hash, \$ doubled to \$\$"
 )
 any=0

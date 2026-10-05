@@ -107,6 +107,9 @@ it. `docker compose run --rm <app>` still works, because naming a service enable
 - `homelab.public: true` plus `traefik.http.routers.<app>.entrypoints: websecure,public` also
   serves the app at `<app>.${PUBLIC_DOMAIN}` from the internet. Only add it to an app with its own
   login, and only when asked.
+- An app with no login of its own gets
+  `traefik.http.routers.<app>.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}`, so Tinyauth
+  protects it whenever `TINYAUTH_ENABLED` is set.
 
 ### Secrets and environment
 

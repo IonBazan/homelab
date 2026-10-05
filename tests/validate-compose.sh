@@ -26,6 +26,8 @@ set -x
 docker compose --env-file /dev/null config --quiet
 COMPOSE_FILE=docker-compose.yaml:docker-compose.ports.yaml \
   docker compose --env-file /dev/null config --quiet
+TINYAUTH_ENABLED=true docker compose --env-file /dev/null config --quiet
+for script in scripts/*.sh apps/config/qbittorrent/webui-login.sh; do bash -n "$script"; done
 
 { set +x; } 2>/dev/null
 
