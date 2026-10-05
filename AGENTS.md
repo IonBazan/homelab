@@ -126,8 +126,8 @@ it. `docker compose run --rm <app>` still works, because naming a service enable
    encryption/JWT secret, password) or derivable from the host (an IP, CIDR, id, timezone),
    also wire it into `scripts/setup-env.sh` — the `GEN` array for random values, the `fill_detected`
    block for host values — so a fresh `.env` comes up ready to launch.
-4. Add a `#### [App](apps/<category>/<app>.yaml)` entry to the README service list, with the
-   one-line description, ports and profiles.
+4. Add a `#### [App](<project website>) ([definition](apps/<category>/<app>.yaml))` entry to the
+   README service list, with the one-line description, ports and profiles.
 5. Prefer the upstream project's own recommended compose file as the starting point, then strip
    it to the minimum that works here: drop settings that only restate image defaults, and keep
    the ones that are load-bearing.
@@ -185,6 +185,16 @@ docker compose config --quiet
 ```bash
 COMPOSE_FILE=docker-compose.yaml:docker-compose.ports.yaml docker compose config --quiet
 ```
+
+When a change touches README headings or links, check every link you changed or that points at a
+changed heading:
+
+- an in-page link (`#anchor`) must match a heading. GitHub builds the anchor from the visible
+  heading text: lowercase, punctuation dropped, spaces turned into hyphens. So
+  `#### [Sonarr](https://sonarr.tv) ([definition](apps/media/sonarr.yaml))` becomes
+  `#sonarr-definition`, and renaming a heading breaks every link to it;
+- a relative link must point at a file that exists;
+- an external link must still load.
 
 Do not run `docker compose up`, `down`, `pull` or `restart` unless explicitly asked. The stack
 is live, and pulling or recreating a container is a production action, not a verification step.
