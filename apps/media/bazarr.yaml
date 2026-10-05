@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
   bazarr:
-    image: lscr.io/linuxserver/bazarr
+    image: linuxserver/bazarr
     container_name: bazarr
     profiles: ["bazarr", "arrs", "media", "basic", "default", "full"]
     environment:

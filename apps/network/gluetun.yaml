@@ -8,6 +8,9 @@ services:
       - NET_ADMIN
     env_file:
       - ../../.env.gluetun
+    environment:
+      TZ: ${TZ}
+      FIREWALL_OUTBOUND_SUBNETS: ${PHYSICAL_SERVER_NETWORK}
     networks:
       - vpn
       - traefik
@@ -32,5 +35,5 @@ services:
       traefik.enable: true
       traefik.http.routers.qbittorrent.rule: Host(`qbittorrent.${DOMAIN_NAME}`)
       traefik.http.routers.qbittorrent.service: qbittorrent
-      traefik.http.services.qbittorrent.loadbalancer.server.port: ${QBITTORRENT_PORT:-8081}
+      traefik.http.services.qbittorrent.loadbalancer.server.port: 8081
       traefik.http.services.qbittorrent.loadbalancer.passhostheader: false

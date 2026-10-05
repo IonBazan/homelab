@@ -8,9 +8,10 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ}
-      WEBUI_PORT: ${QBITTORRENT_PORT:-8081}
+      WEBUI_PORT: 8081
       QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-admin}
       QBITTORRENT_PASSWORD: ${QBITTORRENT_PASSWORD:-}
+      TRUSTED_PROXIES: ${DOCKER_NETWORK_CIDR:-172.16.0.0/12}
     volumes:
       - qbittorrent_data:/config
       - myMedia:/media
@@ -37,7 +38,7 @@ services:
       homepage.widget.type: qbittorrent
       homepage.widget.enableLeechProgress: true
       homepage.widget.enableLeechSize: true
-      homepage.widget.url: http://gluetun:${QBITTORRENT_PORT:-8081}
+      homepage.widget.url: http://gluetun:8081
       homepage.widget.username: ${QBITTORRENT_USERNAME:-admin}
       homepage.widget.password: ${QBITTORRENT_PASSWORD:-}
 

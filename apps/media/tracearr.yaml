@@ -5,8 +5,6 @@ services:
     container_name: tracearr
     profiles: ["tracearr", "media", "basic", "default", "full"]
     environment:
-      NODE_ENV: production
-      LOG_LEVEL: ${LOG_LEVEL:-info}
       TZ: ${TZ}
       DATABASE_URL: postgres://tracearr:${TRACEARR_DB_PASSWORD:-tracearr}@tracearr-db:5432/tracearr
       REDIS_URL: redis://tracearr-redis:6379

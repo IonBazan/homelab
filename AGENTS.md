@@ -22,7 +22,7 @@ diff against their neighbours.
   `network`, `tools`. Each file is self-contained: its services, its named volumes and, if it
   needs one, its own private network.
 - `apps/config/` — configuration mounted into containers (traefik static config and dynamic
-  rules, pihole entrypoint). Anything a container reads from disk lives here, not in `/data`.
+  rules, Homepage, Configarr, qBittorrent). Anything a container reads from disk lives here, not in `/data`.
 - `.env.example`, `.env.gluetun.example` — tracked templates. The real `.env`, `.env.gluetun`
   and the provider-specific `.env.gluetun.*` files are gitignored and hold the actual secrets.
 - `scripts/setup-env.sh` — first-run bootstrap: creates `.env` from the template, generates the random
@@ -93,7 +93,7 @@ it. `docker compose run --rm <app>` still works, because naming a service enable
   keeps the supporting containers off `traefik`.
 - A web UI's host port goes in `docker-compose.ports.yaml`, not in the app file, as
   `${APP_PORT:-<default>}:<container-port>/tcp`. Check the default is free — Open-WebUI
-  already holds 3000, Homarr 7575, and the *arr apps their usual ports. Keep a port in the app
+  already holds 3000, Homepage 3002, Homarr 7575, and the *arr apps their usual ports. Keep a port in the app
   file only when it cannot work behind Traefik anyway (Traefik's own 80/443, Pi-hole's DNS,
   Plex, the torrent port).
 

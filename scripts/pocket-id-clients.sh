@@ -80,3 +80,13 @@ TINYAUTH_ID=$(raw_value TINYAUTH_OIDC_CLIENT_ID "$ENV_FILE")
 register "${TINYAUTH_ID:-tinyauth}" "Tinyauth" \
   "https://tinyauth.$DOMAIN_NAME/api/oauth/callback/pocketid" \
   "$(raw_value TINYAUTH_OIDC_CLIENT_SECRET "$ENV_FILE")"
+
+OPEN_WEBUI_ID=$(raw_value OPEN_WEBUI_OIDC_CLIENT_ID "$ENV_FILE")
+register "${OPEN_WEBUI_ID:-open-webui}" "Open WebUI" \
+  "https://ai.$DOMAIN_NAME/oauth/oidc/callback" \
+  "$(raw_value OPEN_WEBUI_OIDC_CLIENT_SECRET "$ENV_FILE")"
+
+HOMARR_ID=$(raw_value HOMARR_OIDC_CLIENT_ID "$ENV_FILE")
+register "${HOMARR_ID:-homarr}" "Homarr" \
+  "https://homarr.$DOMAIN_NAME/api/auth/callback/oidc" \
+  "$(raw_value HOMARR_OIDC_CLIENT_SECRET "$ENV_FILE")"

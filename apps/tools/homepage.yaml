@@ -1,11 +1,13 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
   homepage:
-    image: ghcr.io/gethomepage/homepage:latest
+    image: gethomepage/homepage:latest
     container_name: homepage
     profiles: ["homepage", "tools", "basic", "default", "full"]
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: home.${DOMAIN_NAME},${DOMAIN_NAME}
+      HOMEPAGE_ALLOWED_HOSTS: home.${DOMAIN_NAME},${DOMAIN_NAME},${PHYSICAL_SERVER_IP}:${HOMEPAGE_PORT:-3002}
+      HOMEPAGE_VAR_WEATHER_LATITUDE: ${WEATHER_LATITUDE:-1.3521}
+      HOMEPAGE_VAR_WEATHER_LONGITUDE: ${WEATHER_LONGITUDE:-103.8198}
     volumes:
       - ../config/homepage:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -21,3 +23,4 @@ services:
       traefik.enable: true
       traefik.http.routers.homepage.rule: Host(`home.${DOMAIN_NAME}`) || Host(`${DOMAIN_NAME}`)
       traefik.http.services.homepage.loadbalancer.server.port: 3000
+      traefik.http.routers.homepage.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}

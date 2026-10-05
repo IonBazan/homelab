@@ -1,12 +1,6 @@
 trashGuideUrl: https://github.com/TRaSH-Guides/Guides
 recyclarrConfigUrl: https://github.com/recyclarr/config-templates
 
-# Shared qBittorrent download client. The `<<:` merge keys below need
-# CONFIGARR_ENABLE_MERGE=true (set in apps/media/configarr.yaml).
-# host is `gluetun` because qBittorrent shares gluetun's network namespace;
-# `port` must match QBITTORRENT_PORT (default 8081). Credentials come from the
-# same env vars qBittorrent's webui-login.sh uses, so the *arr client stays in
-# sync with the WebUI login (update_password: true re-pushes it on every run).
 x-download-clients:
   qbittorrent: &qbittorrent
     name: qBittorrent
@@ -94,8 +88,16 @@ prowlarr:
             prowlarrUrl: http://prowlarr:9696
             baseUrl: http://radarr:7878
             apiKey: !env RADARR_API_KEY
-      # Pushes Prowlarr's indexers into Sonarr and Radarr right after the apps sync
       sync_indexers: true
+
+    indexer_proxies:
+      data:
+        - name: FlareSolverr
+          type: FlareSolverr
+          fields:
+            host: http://flaresolverr:8191/
+          tags:
+            - flaresolverr
 
     download_clients:
       update_password: true

@@ -22,6 +22,7 @@ services:
     labels:
       traefik.enable: true
       traefik.http.services.glances.loadbalancer.server.port: 61208
+      traefik.http.routers.glances.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
       homepage.group: Tools
       homepage.name: Glances
       homepage.icon: sh-glances.webp

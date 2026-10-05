@@ -49,9 +49,14 @@ Pi-hole's DNS on `53`, Plex's `32400` plus its discovery ports, and gluetun's `T
 
 ### Portability
 
-Copy the files to any machine, change the `.env` parameters and run `docker compose up -d`. There
-are no makefiles, no Ansible and no bash scripts to maintain. It works on most platforms and
-architectures out of the box.
+Copy the files to any Linux machine with Docker, run `scripts/setup-env.sh`, fill in the few values
+it cannot guess, and run `docker compose up -d`. There are no makefiles and no Ansible. The two
+scripts in `scripts/` are optional helpers for the first run.
+
+Several apps need Linux features that Docker Desktop on macOS or Windows does not provide: host
+networking (Home Assistant, Homebridge, Tailscale, Gangplank), `/run/dbus`, `/dev/net/tun` and
+Plex's `/dev/dri`. On a host without an Intel or AMD GPU, remove the `devices` and `group_add`
+lines from [`plex.yaml`](apps/media/plex.yaml), otherwise Plex does not start.
 
 ## Architecture
 
@@ -117,6 +122,7 @@ flowchart TB
             sonarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/sonarr.png", label: "Sonarr", pos: "b", w: 40, h: 40, constraint: "on" }
             prowlarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/prowlarr.png", label: "Prowlarr", pos: "b", w: 40, h: 40, constraint: "on" }
             bazarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/bazarr.png", label: "Bazarr", pos: "b", w: 40, h: 40, constraint: "on" }
+            flaresolverr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/flaresolverr.png", label: "FlareSolverr", pos: "b", w: 40, h: 40, constraint: "on" }
             configarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/configarr.png", label: "Configarr", pos: "b", w: 40, h: 40, constraint: "on" }
         end
         qbit@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/qbittorrent.png", label: "qBittorrent", pos: "b", w: 40, h: 40, constraint: "on" }
@@ -150,14 +156,15 @@ flowchart TB
     cloudflare ---|"ACME DNS challenge"| traefik
     internet ---|"port forwarding"| gangplank
 
-    configarr -->|"configures"| radarr & sonarr & prowlarr
+    configarr -->|"configures"| radarr & sonarr & prowlarr & flaresolverr
+    prowlarr -->|"Cloudflare challenges"| flaresolverr
     tracearr -->|"playback stats"| servers
     seerr -->|"requests"| arr
 
     traefik --> auth
     auth -->|"Tinyauth protects"| arr
     auth -->|"Pocket ID OIDC"| ai
-    auth -->|"Pocket ID OIDC"| tools
+    auth -->|"Pocket ID OIDC, Tinyauth"| tools
 
     arr -->|"sends downloads"| qbit
     gluetun -.-|"via VPN"| qbit
@@ -204,8 +211,8 @@ Configarr is in no group at all. It only runs when you call it, see [Configarr](
 
 Some app profiles start what the app cannot run without. qBittorrent needs Gluetun's network, so
 `qbittorrent` starts Gluetun too, `tinyauth` starts Pocket ID, its only login, and `configarr`
-starts Sonarr, Radarr and Prowlarr, which it configures. The `auth` category starts Traefik, since
-Pocket ID and Tinyauth are only reachable through it. Other links between apps are optional:
+starts Sonarr, Radarr, Prowlarr and FlareSolverr, which it configures. The `auth` category starts
+Traefik, since Pocket ID and Tinyauth are only reachable through it. Other links between apps are optional:
 `sonarr` on its own starts only Sonarr.
 
 ### Examples
@@ -257,16 +264,18 @@ cd homelab
 scripts/setup-env.sh
 ```
 
-`scripts/setup-env.sh` creates `.env` from `.env.example` and generates every secret that can be random (the
-`*_API_KEY`s, `HOMARR_SECRET_ENCRYPTION_KEY`, `POCKET_ID_ENCRYPTION_KEY`, the two `TRACEARR_*`
-secrets, and the qBittorrent, Pi-hole and Tracearr database passwords). It sets a blank
+`scripts/setup-env.sh` creates `.env` from `.env.example` and generates every secret that can be
+random (the `*_API_KEY`s, `HOMARR_SECRET_ENCRYPTION_KEY`, `POCKET_ID_ENCRYPTION_KEY`, the two
+`TRACEARR_*` secrets, and the qBittorrent, Pi-hole and Tracearr database passwords). It sets a blank
 `COMPOSE_PROFILES` to `default`, since an empty value starts nothing. It detects host values from
-the default-route interface (`PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`, `PUID`,
-`PGID`), sets `TINYAUTH_ENABLED=true` when `COMPOSE_PROFILES` includes `auth`, `tinyauth` or `full`,
-scaffolds `.env.gluetun` from the template, and prints the handful of tokens you still
-have to fetch yourself. It never
-overwrites a value you have edited (host values overwrite only the shipped placeholder), so it is
-safe to re-run.
+the default-route interface (`PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`, `PUID`, `PGID`,
+`RENDER_GID`), and `DOCKER_NETWORK_CIDR` once the `traefik` network exists. With Pocket ID in
+`COMPOSE_PROFILES` it generates the Open WebUI and Homarr client secrets, and with Tinyauth it sets
+`TINYAUTH_ENABLED=true`. It expands a leading `~` in `MEDIA_DIR` and `BACKUP_DIR`, creates the
+folder layout under both, scaffolds `.env.gluetun` from the template, checks the result with
+`docker compose config`, and prints the handful of tokens you still have to fetch yourself. It
+never overwrites a value you have edited (host values overwrite only the shipped placeholder), so
+it is safe to re-run.
 
 To do it by hand instead:
 
@@ -290,7 +299,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `TZ` | all | _(auto)_ IANA name, e.g. `Europe/Warsaw` ([list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)). |
 | `PUID` / `PGID` | media apps | _(auto)_ `id -u` / `id -g` for the user that owns `MEDIA_DIR`. |
 | `BACKUP_DIR` | app backups | **Required.** Absolute path that collects each app's scheduled backups in its own subdirectory, described under [Backups](#7-backups). `scripts/setup-env.sh` creates the subdirectories. |
-| `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). Compose does **not** expand `~`. |
+| `MEDIA_DIR` | media apps | Absolute path to the media root (holds `Movies/`, `Shows/`, `Downloads/`). `scripts/setup-env.sh` expands a leading `~` and creates the subdirectories. |
 | `COMPOSE_PROFILES` | service selection | _(auto if blank)_ Comma-separated (see [Profiles](#profiles)). `default` is `basic` plus Traefik. Add single profiles to a group, e.g. `default,ai`. |
 | `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host, described under [Host ports](#host-ports). Unset means Traefik and Tailscale only. |
 | `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | _(auto)_ Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
@@ -308,14 +317,17 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Applied to the WebUI login on every container start and wires the Homepage widget, described under [qBittorrent](#qbittorrentappsmediaqbittorrentyaml). Blank means you set it in the UI. |
 | `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | _(auto)_ Only with the `auth` or `tinyauth` profile. Registered in Pocket ID for you, described under [Tinyauth](#tinyauthappsauthtinyauthyaml). `TINYAUTH_OIDC_CLIENT_ID` is optional and defaults to `tinyauth`. |
 | `POCKET_ID_STATIC_API_KEY` | Pocket ID client setup | _(auto)_ Admin API key `scripts/pocket-id-clients.sh` uses to register clients. |
+| `OPEN_WEBUI_OIDC_CLIENT_SECRET` / `HOMARR_OIDC_CLIENT_SECRET` | Pocket ID sign-in | _(auto)_ Only when Pocket ID is in the profiles, described under [Pocket ID](#pocket-idappsauthpocket-idyaml). |
+| `DOCKER_NETWORK_CIDR` | Traefik API, qBittorrent | _(auto once the `traefik` network exists)_ Its subnet, trusted as a proxy. Defaults to `172.16.0.0/12`, which covers Docker's default address pools. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Only with the `pihole` profile. |
-| `RENDER_GID` | Plex HW transcode | `getent group render \| cut -d: -f3` on the host. |
+| `RENDER_GID` | Plex HW transcode | _(auto)_ `getent group render \| cut -d: -f3` on the host. |
+| `WEATHER_LATITUDE` / `WEATHER_LONGITUDE` | Homepage weather | **Optional.** Your location for the weather widget. |
 
 ### 3. Fill in `.env.gluetun` (only with the `vpn` profile)
 
-`scripts/setup-env.sh` already created `.env.gluetun.nordvpn`, symlinked `.env.gluetun` to it, and set
-`FIREWALL_OUTBOUND_SUBNETS` from `PHYSICAL_SERVER_NETWORK`. Edit that file and uncomment **one**
-provider block. To use WireGuard instead, point the symlink at `.env.gluetun.wireguard`.
+`scripts/setup-env.sh` already created `.env.gluetun.nordvpn` and symlinked `.env.gluetun` to it. Edit
+that file and uncomment **one** provider block. To use WireGuard instead, point the symlink at
+`.env.gluetun.wireguard`.
 
 - **NordVPN.** Dashboard → *NordVPN manual setup* → copy the **service credentials** into
   `OPENVPN_USER` and `OPENVPN_PASSWORD`.
@@ -323,8 +335,8 @@ provider block. To use WireGuard instead, point the symlink at `.env.gluetun.wir
   (`WIREGUARD_PRIVATE_KEY`, `WIREGUARD_ADDRESSES`, peer `WIREGUARD_PUBLIC_KEY`, `VPN_ENDPOINT_IP`,
   `VPN_ENDPOINT_PORT`).
 
-Set `FIREWALL_OUTBOUND_SUBNETS` to your LAN CIDR so the qBittorrent WebUI stays reachable while the
-tunnel is up.
+Gluetun takes `TZ` and `FIREWALL_OUTBOUND_SUBNETS` from `TZ` and `PHYSICAL_SERVER_NETWORK` in `.env`,
+so the qBittorrent WebUI stays reachable from the LAN while the tunnel is up.
 
 ### 4. Create the folder layout
 
@@ -346,13 +358,9 @@ I keep everything in the home directory of the user that runs the stack:
     `-- homeassistant/
 ```
 
-Any paths work. Set `MEDIA_DIR` and `BACKUP_DIR` to absolute paths (Compose does not expand `~`),
-for example `/home/<user>/Media`, and keep `Downloads/` on the same filesystem as `Movies/` and
-`Shows/` so the *arr apps can hardlink instead of copying.
-
-```bash
-mkdir -p ~/Media/{Movies,Shows,Downloads}   # same path as MEDIA_DIR
-```
+Any paths work. `scripts/setup-env.sh` creates this layout under `MEDIA_DIR` and `BACKUP_DIR`. Keep
+`Downloads/` on the same filesystem as `Movies/` and `Shows/` so the *arr apps can hardlink instead
+of copying.
 
 ### 5. Launch
 
@@ -491,6 +499,14 @@ Pi-hole is a network-wide ad blocker and plays no part in routing (profile `piho
 If you run it and point clients at it, it can serve the `*.${DOMAIN_NAME}` to `PHYSICAL_SERVER_IP`
 mapping locally instead of the Cloudflare records.
 
+It binds port 53 on the host. On Ubuntu and other distributions where `systemd-resolved` already
+listens there, turn off its stub listener first:
+
+```bash
+sudo sed -i 's/^#\?DNSStubListener=.*/DNSStubListener=no/' /etc/systemd/resolved.conf
+sudo systemctl restart systemd-resolved
+```
+
 ## Application list
 
 ### AI
@@ -517,15 +533,16 @@ OpenID Connect provider that signs users in with passkeys, for apps that support
 they were registered for, so the host port is for troubleshooting only. Create the first admin
 account at `https://id.${DOMAIN_NAME}/setup`.
 
-Single sign-on is opt-in per app. Create an OIDC client in Pocket ID with the callback URL below,
-then put its ID and secret in `.env`. While those are blank the app keeps only its own login, and
-once they are set it still keeps that login next to the Pocket ID button, so you are never locked
-out when Pocket ID is down.
+Single sign-on is opt-in per app and turns on when the app's client secret is set in `.env`.
+`scripts/setup-env.sh` generates the secrets when `COMPOSE_PROFILES` includes `auth`, `pocket-id`,
+`tinyauth` or `full`, and `scripts/pocket-id-clients.sh` registers the clients in Pocket ID (see
+below). While the secret is blank the app keeps only its own login, and once it is set it still
+keeps that login next to the Pocket ID button, so you are never locked out when Pocket ID is down.
 
-| App | `.env` variables | Callback URL |
-| --- | --- | --- |
-| Open-WebUI | `OPEN_WEBUI_OIDC_CLIENT_ID`, `_SECRET` | `https://ai.${DOMAIN_NAME}/oauth/oidc/callback` |
-| Homarr | `HOMARR_OIDC_CLIENT_ID`, `_SECRET` | `https://homarr.${DOMAIN_NAME}/api/auth/callback/oidc` |
+| App | `.env` variables | Client ID (default) | Callback URL |
+| --- | --- | --- | --- |
+| Open-WebUI | `OPEN_WEBUI_OIDC_CLIENT_SECRET`, optional `_ID` | `open-webui` | `https://ai.${DOMAIN_NAME}/oauth/oidc/callback` |
+| Homarr | `HOMARR_OIDC_CLIENT_SECRET`, optional `_ID` | `homarr` | `https://homarr.${DOMAIN_NAME}/api/auth/callback/oidc` |
 
 Open-WebUI links a Pocket ID login to an existing account with the same email. Homarr creates a
 separate user for it.
@@ -542,7 +559,8 @@ to the script. The static key has full admin access to Pocket ID, so treat it li
 `POCKET_ID_ENCRYPTION_KEY`.
 
 #### [Tinyauth](apps/auth/tinyauth.yaml)
-Forward-auth login page that Traefik puts in front of Sonarr, Radarr, Prowlarr and Bazarr.
+Forward-auth login page that Traefik puts in front of Sonarr, Radarr, Prowlarr, Bazarr, Homepage,
+Glances, DDNS Updater and the Traefik dashboard.
 - **Ports:** none, reachable only through Traefik
 - **Profiles:** `tinyauth`, `auth`, `full` (starts Pocket ID; `auth` starts Traefik, `tinyauth` alone needs `traefik`)
 - Proxied by Traefik at `https://tinyauth.${DOMAIN_NAME}`.
@@ -577,8 +595,9 @@ its API key there:
 
 The rules are `tinyauth.apps.*` labels on each app.
 
-Set `TINYAUTH_ENABLED=true` in `.env` to put Tinyauth in front of Sonarr, Radarr, Prowlarr and
-Bazarr: each app's Traefik router then uses the `tinyauth` middleware. `scripts/setup-env.sh` sets it
+Set `TINYAUTH_ENABLED=true` in `.env` to put Tinyauth in front of Sonarr, Radarr, Prowlarr, Bazarr,
+Homepage, Glances, DDNS Updater and the Traefik dashboard: each app's Traefik router then uses the
+`tinyauth` middleware. Only the *arr apps have API paths that skip it. `scripts/setup-env.sh` sets it
 when `COMPOSE_PROFILES` includes `auth`, `tinyauth` or `full`. Sonarr, Radarr and Prowlarr also
 switch to the `External` login method and stop asking for a second login. If Tinyauth is not
 running while the flag is set, Traefik rejects the apps' routers and they return 404 instead of
@@ -606,8 +625,8 @@ Home automation platform running on your local network, supporting a wide range 
 
 Home Assistant rejects proxied requests until it trusts Traefik's forwarding headers. Complete the
 first-run setup directly on `http://<server ip>:8123` before using the proxied URL. Then add the
-Docker network CIDR that Traefik connects from under **Settings > System > Network > Trusted
-proxies**, or as `http.trusted_proxies` in `configuration.yaml`.
+`DOCKER_NETWORK_CIDR` from `.env` under **Settings > System > Network > Trusted proxies**, or as
+`http.trusted_proxies` in `configuration.yaml`.
 
 #### [Homebridge](apps/automation/homebridge.yaml)
 Bridges non-HomeKit devices to Apple HomeKit, so you can control them from Apple devices.
@@ -638,9 +657,18 @@ Indexer manager and proxy for the *arr applications, supporting Usenet and BitTo
 - **Ports:** 9696:9696/tcp (PROWLARR_PORT), overlay only, see [Host ports](#host-ports)
 - **Profiles:** `prowlarr`, `configarr`, `arrs`, `media`, `basic`, `default`, `full`
 
+#### [FlareSolverr](apps/media/flaresolverr.yaml)
+Proxy that solves Cloudflare challenges for Prowlarr indexers that sit behind one.
+- **Ports:** none, reached by Prowlarr over the `traefik` network
+- **Profiles:** `flaresolverr`, `configarr`, `arrs`, `media`, `basic`, `default`, `full`
+
+[Configarr](#configarrappsmediaconfigarryaml) adds it to Prowlarr as an indexer proxy with the
+`flaresolverr` tag. Prowlarr only sends an indexer through it when the indexer carries the same
+tag, so add `flaresolverr` to each indexer that sits behind a Cloudflare challenge.
+
 #### [qBittorrent](apps/media/qbittorrent.yaml)
 Open-source BitTorrent client with a web UI, running behind a VPN for privacy.
-- **Ports:** published on the `gluetun` container. `${QBITTORRENT_PORT:-8081}/tcp` for the WebUI ([overlay only](#host-ports)), `${TORRENT_PORT:-6881}/tcp+udp` for torrents (always published).
+- **Ports:** published on the `gluetun` container. `${QBITTORRENT_PORT:-8081}:8081/tcp` for the WebUI ([overlay only](#host-ports)), `${TORRENT_PORT:-6881}/tcp+udp` for torrents (always published).
 - **Profiles:** `qbittorrent`, `vpn`, `basic`, `default`, `full`
 - **Traefik:** its router is defined on the `gluetun` service, because qBittorrent shares gluetun's network namespace.
 
@@ -649,7 +677,9 @@ mounted over the image's default config, so the image copies it into the `qbitto
 **only if it isn't there yet** (legal notice accepted, downloads at `/media/Downloads`,
 reverse-proxy-friendly WebUI settings). On every start,
 [`webui-login.sh`](apps/config/qbittorrent/webui-login.sh) runs from the image's
-`/custom-cont-init.d` before qBittorrent launches. If `QBITTORRENT_PASSWORD` is set, it writes
+`/custom-cont-init.d` before qBittorrent launches. It sets `WebUI\TrustedReverseProxiesList` to
+`DOCKER_NETWORK_CIDR`, so the WebUI sees the real client address behind Traefik. If
+`QBITTORRENT_PASSWORD` is set, it also writes
 `WebUI\Username` and `WebUI\Password_PBKDF2` in qBittorrent's own PBKDF2-HMAC-SHA512 format. That
 step is idempotent, and the conf only changes when you change the env var, so the login survives
 every restart and recreate. The same `QBITTORRENT_PASSWORD` and `QBITTORRENT_USERNAME` feed
@@ -730,14 +760,15 @@ created with a blank password and will not connect.
 
 In **Prowlarr** it registers Sonarr and Radarr as applications on `fullSync`, adds the same
 qBittorrent download client, and then triggers *Sync App Indexers* so every indexer you have in
-Prowlarr is pushed into both apps. Indexers themselves are not managed: add them in the Prowlarr UI
+Prowlarr is pushed into both apps. It also adds [FlareSolverr](#flaresolverrappsmediaflaresolverryaml)
+as an indexer proxy tagged `flaresolverr`. Indexers themselves are not managed: add them in the Prowlarr UI
 and re-run Configarr, or let Prowlarr's own sync pick them up. The applications are deliberately
 left untagged, because a tagged application only receives indexers carrying the same tag. Nothing is
 deleted, so anything you added by hand in Prowlarr stays.
 
 It runs only when you call it, whatever `COMPOSE_PROFILES` says, because Compose turns on the
-profile of a service named on the command line. It starts Sonarr, Radarr and Prowlarr first if they
-are not running, applies the config and exits:
+profile of a service named on the command line. It starts Sonarr, Radarr, Prowlarr and
+FlareSolverr first if they are not running, applies the config and exits:
 
 ```bash
 docker compose run --rm configarr
@@ -821,7 +852,7 @@ inside it to force a re-issue. Needs `CF_DNS_API_TOKEN` and `CF_API_EMAIL` in `.
 
 The dashboard is at `https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/`, with the
 trailing slash required. It has **no auth by default**. Set `TRAEFIK_DASHBOARD_AUTH` in `.env` to put
-HTTP basic auth in front of it:
+HTTP basic auth in front of it, or set `TINYAUTH_ENABLED` to require the Tinyauth login:
 
 ```bash
 htpasswd -nbB admin 'yourpassword' | sed -e 's/\$/\$\$/g'   # paste result as TRAEFIK_DASHBOARD_AUTH
@@ -838,7 +869,7 @@ URL.
 
 The bare Host `traefik` is exempt from the catch-all. A `web`-only router maps it to `api@internal`
 so Homepage's Traefik widget can read the API at `http://traefik` from the Docker network. An IP
-allowlist (`127.0.0.1/32,172.16.0.0/12`) keeps LAN clients from reaching it with a spoofed `Host`
+allowlist (`127.0.0.1/32` plus `DOCKER_NETWORK_CIDR`) keeps LAN clients from reaching it with a spoofed `Host`
 header, so it stays unauthenticated without exposing the API.
 
 A third entrypoint, `public` on port 8443, carries traffic from the internet. Only routers that set
@@ -856,21 +887,21 @@ it.
 #### [Homepage](apps/tools/homepage.yaml)
 Start page listing every service in groups, with live service widgets and top-of-page info widgets
 (system resources, weather, clock, web search).
-- **Ports:** none, proxied only
+- **Ports:** 3002:3000/tcp (HOMEPAGE_PORT), overlay only, see [Host ports](#host-ports)
 - **Profiles:** `homepage`, `tools`, `basic`, `default`, `full`
 - Reachable at `https://home.${DOMAIN_NAME}` and at the bare apex `https://${DOMAIN_NAME}`.
 
 The dashboard builds itself from `homepage.*` labels on each container (`homepage.group`,
 `homepage.name`, `homepage.icon`, `homepage.href`, `homepage.widget.*`), so a new service shows up on
 its own. Info widgets and layout live in [`apps/config/homepage/`](apps/config/homepage/)
-(`widgets.yaml`, `settings.yaml`, `docker.yaml`, `bookmarks.yaml`). Set the weather `latitude` and
-`longitude` in `widgets.yaml` to your location. Icons use the [selfh.st](https://selfh.st/icons/) set
+(`widgets.yaml`, `settings.yaml`, `docker.yaml`, `bookmarks.yaml`). Set `WEATHER_LATITUDE` and
+`WEATHER_LONGITUDE` in `.env` to your location for the weather widget. Icons use the [selfh.st](https://selfh.st/icons/) set
 through the `sh-<name>.webp` prefix, with `mdi-…` for the few without one.
 
 Service widgets pull stats when a credential is present in `.env`, otherwise the tile is link-only.
 The credentials are Sonarr, Radarr and Prowlarr (`*_API_KEY`), Pi-hole (`PIHOLE_PASSWORD`), Plex
 (`PLEX_TOKEN`), Jellyfin (`JELLYFIN_API_KEY`), Bazarr (`BAZARR_API_KEY`), Seerr (`SEERR_API_KEY`),
-Home Assistant (`HOMEASSISTANT_TOKEN`) and qBittorrent (`QBITTORRENT_USERNAME`,
+Tracearr (`TRACEARR_API_KEY`), Home Assistant (`HOMEASSISTANT_TOKEN`) and qBittorrent (`QBITTORRENT_USERNAME`,
 `QBITTORRENT_PASSWORD`).
 
 #### [Homarr](apps/tools/homarr.yaml)
@@ -895,12 +926,14 @@ summarising it on the dashboard.
 
 It runs in the host PID namespace and reads the Docker socket, so CPU, memory, disk and process
 figures are the host's. Network counters are the container's own, since it stays on the `traefik`
-network. There is no authentication in front of the web UI, so keep it off the public internet.
+network. The web UI has no login of its own, only Tinyauth's when `TINYAUTH_ENABLED` is set, so keep
+it off the public internet.
 
 ## Testing
 
 `tests/validate-compose.sh` renders the whole stack with placeholder values instead of your `.env`,
-with and without the ports overlay, and checks that each profile starts the services it should.
+with and without the ports overlay, and checks that each profile starts the services it should,
+including that every app's own profile (its file name) starts it.
 Run it after changing any compose file:
 
 ```bash

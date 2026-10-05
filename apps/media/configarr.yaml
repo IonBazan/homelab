@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
   configarr:
-    image: ghcr.io/raydak-labs/configarr:latest
+    image: configarr/configarr:latest
     container_name: configarr
     profiles: ["configarr"]
     environment:
@@ -21,8 +21,9 @@ services:
       - sonarr
       - radarr
       - prowlarr
+      - flaresolverr
     # Run-once tool: it syncs TRaSH-Guides config into Sonarr/Radarr, wires up
-    # Prowlarr's applications and download client, and exits.
+    # Prowlarr's applications, download client and FlareSolverr proxy, and exits.
     # A restart policy would make Docker relaunch it every minute, so keep it "no".
     restart: "no"
     logging:

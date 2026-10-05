@@ -4,12 +4,18 @@
 #   * create .env from .env.example (if missing)
 #   * fill every blank secret that can be random - API keys, encryption/JWT
 #     secrets, qBittorrent + Pi-hole + Tracearr DB passwords
-#   * detect host values - LAN IP, LAN CIDR, timezone, PUID/PGID
+#   * detect host values - LAN IP, LAN CIDR, timezone, PUID/PGID, render group,
+#     and the traefik Docker network's subnet once it exists
 #   * set TINYAUTH_ENABLED=true when the auth, tinyauth or full profile is selected
+#   * generate the Open WebUI and Homarr Pocket ID client secrets when Pocket ID
+#     is in the profiles
 #   * prompt for the values only you know (domain, media dir, Cloudflare,
 #     Tailscale) when run from a terminal
-#   * create one backup directory per app under BACKUP_DIR
+#   * expand a leading ~ in MEDIA_DIR and BACKUP_DIR to your home directory
+#   * create the media layout under MEDIA_DIR and one backup directory per app
+#     under BACKUP_DIR
 #   * scaffold .env.gluetun from the template
+#   * render the stack with docker compose config to catch mistakes early
 #
 # Safe to re-run: your own values are never touched (detected host values
 # overwrite only a still-default placeholder, prompts only ask for those).
@@ -153,6 +159,13 @@ elif [ "$(id -u)" != "0" ]; then
 else
   echo "  PUID/PGID                skipped (running as root)"
 fi
+if command -v getent >/dev/null 2>&1; then
+  fill_detected RENDER_GID "$(getent group render | cut -d: -f3)"
+fi
+if docker network inspect traefik >/dev/null 2>&1; then
+  fill_detected DOCKER_NETWORK_CIDR "$(docker network inspect traefik \
+    --format '{{range .IPAM.Config}}{{println .Subnet}}{{end}}' | grep -m1 '\.')"
+fi
 
 echo
 echo "Login:"
@@ -166,6 +179,19 @@ case ",$(raw_value COMPOSE_PROFILES "$ENV_FILE")," in
     fi
     ;;
   *) printf '  %-24s left blank (no Tinyauth in the profiles)\n' TINYAUTH_ENABLED ;;
+esac
+# A secret turns on the app's Pocket ID button, so only generate them with Pocket ID
+case ",$(raw_value COMPOSE_PROFILES "$ENV_FILE")," in
+  *,auth,*|*,pocket-id,*|*,tinyauth,*|*,full,*)
+    for key in OPEN_WEBUI_OIDC_CLIENT_SECRET HOMARR_OIDC_CLIENT_SECRET; do
+      if env_has_value "$key" "$ENV_FILE"; then
+        printf '  %-30s kept (already set)\n' "$key"
+      else
+        set_env "$key" "$(rand_hex 32)" "$ENV_FILE"
+        printf '  %-30s generated\n' "$key"
+      fi
+    done
+    ;;
 esac
 
 # prompt_value KEY QUESTION -> ask only while the value is empty or still the
@@ -226,19 +252,41 @@ for row in "${GEN[@]}"; do
   fi
 done
 
-# --- backup directories ------------------------------------------------------
+# --- media and backup directories --------------------------------------------
 # Created here so they belong to you, not root. Tracearr runs as uid 1001, so
 # its directory has to belong to that uid instead, which needs root.
+home=$HOME
+[ -n "${SUDO_USER:-}" ] && home=$(eval echo "~$SUDO_USER")
+for key in MEDIA_DIR BACKUP_DIR; do
+  dir=$(raw_value "$key" "$ENV_FILE")
+  case $dir in
+    "~"|"~/"*) set_env "$key" "$home${dir#\~}" "$ENV_FILE" ;;
+  esac
+done
+
+# make_dir PATH -> create PATH owned by the invoking user, even under sudo
+make_dir() {
+  [ -d "$1" ] && return
+  mkdir -p "$1"
+  [ -n "${SUDO_UID:-}" ] && chown "$SUDO_UID:$SUDO_GID" "$(dirname "$1")" "$1"
+  echo "  created $1"
+}
+
+echo
+echo "Media:"
+media_dir=$(raw_value MEDIA_DIR "$ENV_FILE")
+case $media_dir in
+  /*) for sub in Movies Shows Downloads; do make_dir "$media_dir/$sub"; done ;;
+  *) echo "  MEDIA_DIR must be an absolute path, directories not created" ;;
+esac
+
 echo
 echo "Backups:"
 backup_dir=$(raw_value BACKUP_DIR "$ENV_FILE")
 case $backup_dir in
   /*)
     for app in radarr sonarr prowlarr bazarr tracearr homeassistant; do
-      [ -d "$backup_dir/$app" ] && continue
-      mkdir -p "$backup_dir/$app"
-      [ -n "${SUDO_UID:-}" ] && chown "$SUDO_UID:$SUDO_GID" "$backup_dir" "$backup_dir/$app"
-      echo "  created $backup_dir/$app"
+      make_dir "$backup_dir/$app"
     done
     if [ "$(id -u)" = "0" ]; then
       chown -R 1001 "$backup_dir/tracearr"
@@ -261,11 +309,6 @@ if [ ! -e "$GLUETUN_FILE" ]; then
   [ -e "$target" ] || target=.env.gluetun.wireguard
   ln -sf "$target" "$GLUETUN_FILE"
   echo "  linked .env.gluetun -> $target"
-  net=$(raw_value PHYSICAL_SERVER_NETWORK "$ENV_FILE")
-  if [ -n "$net" ]; then
-    set_env FIREWALL_OUTBOUND_SUBNETS "$net" "$target"
-    echo "  set FIREWALL_OUTBOUND_SUBNETS=$net"
-  fi
 else
   echo "  $GLUETUN_FILE exists, left as-is"
 fi
@@ -290,6 +333,18 @@ for row in "${MANUAL[@]}"; do
   env_has_value "$key" "$ENV_FILE" || { printf '  %-24s %s\n' "$key" "$hint"; any=1; }
 done
 [ "$any" -eq 0 ] && echo "  (nothing - all set)"
+
+echo
+echo "Compose:"
+if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+  if docker compose config --quiet; then
+    echo "  docker compose config renders cleanly"
+  else
+    echo "  docker compose config failed, fix the values above before docker compose up -d"
+  fi
+else
+  echo "  docker compose not found, skipped"
+fi
 
 echo
 echo "Review the defaults the script can't guess: DOMAIN_NAME  MEDIA_DIR  COMPOSE_PROFILES  COMPOSE_FILE"

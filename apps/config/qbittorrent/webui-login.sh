@@ -2,7 +2,8 @@
 # Runs as root from /custom-cont-init.d on every start, after the image has seeded
 # qBittorrent.conf and before qBittorrent launches. Writes WebUI\Username and
 # WebUI\Password_PBKDF2 (PBKDF2-HMAC-SHA512, 100k iterations, qBittorrent's own
-# format) from QBITTORRENT_USERNAME / QBITTORRENT_PASSWORD. A matching login is
+# format) from QBITTORRENT_USERNAME / QBITTORRENT_PASSWORD, and
+# WebUI\TrustedReverseProxiesList from TRUSTED_PROXIES. A matching login is
 # left untouched; an empty password leaves the login to qBittorrent.
 exec python3 - <<'EOF'
 import base64
@@ -53,26 +54,35 @@ def set_pref(lines, key, value):
 
 password = os.environ.get("QBITTORRENT_PASSWORD", "")
 username = os.environ.get("QBITTORRENT_USERNAME", "admin")
-if not password:
-    print("[webui-login] QBITTORRENT_PASSWORD empty, leaving the WebUI login to qBittorrent")
-    raise SystemExit
+proxies = os.environ.get("TRUSTED_PROXIES", "")
 
 with open(CONF) as fh:
     lines = fh.read().splitlines()
+changed = False
+
+_, cur_proxies = read_pref(lines, r"WebUI\TrustedReverseProxiesList")
+if proxies and cur_proxies != proxies:
+    set_pref(lines, r"WebUI\TrustedReverseProxiesList", proxies)
+    changed = True
+    print(f"[webui-login] trusted reverse proxies set to {proxies}")
 
 _, cur_user = read_pref(lines, r"WebUI\Username")
 _, cur_pass = read_pref(lines, r"WebUI\Password_PBKDF2")
-if cur_user == username and cur_pass and password_matches(cur_pass, password):
+if not password:
+    print("[webui-login] QBITTORRENT_PASSWORD empty, leaving the WebUI login to qBittorrent")
+elif cur_user == username and cur_pass and password_matches(cur_pass, password):
     print("[webui-login] WebUI login already matches QBITTORRENT_PASSWORD")
-    raise SystemExit
+else:
+    salt = os.urandom(16)
+    value = "@ByteArray({}:{})".format(
+        base64.b64encode(salt).decode(), base64.b64encode(pbkdf2(password, salt)).decode()
+    )
+    set_pref(lines, r"WebUI\Username", username)
+    set_pref(lines, r"WebUI\Password_PBKDF2", f'"{value}"')
+    changed = True
+    print(f"[webui-login] applied WebUI login for user '{username}'")
 
-salt = os.urandom(16)
-value = "@ByteArray({}:{})".format(
-    base64.b64encode(salt).decode(), base64.b64encode(pbkdf2(password, salt)).decode()
-)
-set_pref(lines, r"WebUI\Username", username)
-set_pref(lines, r"WebUI\Password_PBKDF2", f'"{value}"')
-with open(CONF, "w") as fh:
-    fh.write("\n".join(lines) + "\n")
-print(f"[webui-login] applied WebUI login for user '{username}'")
+if changed:
+    with open(CONF, "w") as fh:
+        fh.write("\n".join(lines) + "\n")
 EOF

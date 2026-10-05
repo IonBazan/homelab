@@ -21,7 +21,7 @@ services:
       homepage.group: Automation
       homepage.name: Homebridge
       homepage.icon: sh-homebridge.webp
-      homepage.href: //homebridge.${DOMAIN_NAME} 
+      homepage.href: //homebridge.${DOMAIN_NAME}
       homepage.description: HomeKit bridge
 
 volumes:

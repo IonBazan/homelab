@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
   seerr:
-    image: ghcr.io/seerr-team/seerr:latest
+    image: seerr/seerr:latest
     container_name: seerr
     profiles: ["seerr", "arrs", "media", "basic", "default", "full"]
     init: true

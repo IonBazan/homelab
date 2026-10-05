@@ -55,8 +55,8 @@ services:
       traefik.http.routers.traefik.rule: Host(`${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}`)
       traefik.http.routers.traefik.service: api@internal
       traefik.http.routers.traefik.entrypoints: websecure
-      # basic auth is added only when TRAEFIK_DASHBOARD_AUTH is set (blank = no auth)
-      traefik.http.routers.traefik.middlewares: traefik-dashboard-redirect${TRAEFIK_DASHBOARD_AUTH:+,traefik-dashboard-auth}
+      # basic auth and Tinyauth are added only when their variables are set (blank = no auth)
+      traefik.http.routers.traefik.middlewares: traefik-dashboard-redirect${TRAEFIK_DASHBOARD_AUTH:+,traefik-dashboard-auth}${TINYAUTH_ENABLED:+,tinyauth@docker}
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: ^https://[^/]+/?$$
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: https://${TRAEFIK_SUBDOMAIN:-traefik}.${DOMAIN_NAME}/dashboard/
       traefik.http.middlewares.traefik-dashboard-auth.basicauth.users: ${TRAEFIK_DASHBOARD_AUTH:-}
@@ -67,7 +67,7 @@ services:
       traefik.http.routers.traefik-api.service: api@internal
       traefik.http.routers.traefik-api.entrypoints: web
       traefik.http.routers.traefik-api.middlewares: traefik-api-internal
-      traefik.http.middlewares.traefik-api-internal.ipallowlist.sourcerange: 127.0.0.1/32,172.16.0.0/12
+      traefik.http.middlewares.traefik-api-internal.ipallowlist.sourcerange: 127.0.0.1/32,${DOCKER_NETWORK_CIDR:-172.16.0.0/12}
       # http->https redirect, scoped to ${DOMAIN_NAME} + its subdomains (replaces the
       # blanket entrypoint redirect so foreign hosts stay on :80 for the catch-all).
       traefik.http.routers.https-redirect.rule: HostRegexp(`^(.+\.)?${DOMAIN_NAME}$$`)
