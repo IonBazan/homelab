@@ -197,12 +197,13 @@ There are three kinds of profile:
 
 | Group | Starts | Use it when |
 | --- | --- | --- |
-| `basic` | Media servers, the *arr apps, Seerr, Tracearr, FlareSolverr, qBittorrent behind the VPN, home automation, Homepage, Glances and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
+| `basic` | Media servers, the *arr apps, Seerr, Tracearr, qBittorrent behind the VPN, Homepage, Glances and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
 | `default` | Everything in `basic`, plus Traefik | The usual setup, and the value `.env.example` ships with |
-| `full` | Every long-running service in the repo, including AI, Pocket ID, Tinyauth, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
+| `full` | Every long-running service in the repo, including home automation, FlareSolverr, AI, Pocket ID, Tinyauth, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
 
-The AI stack, Pocket ID, Tinyauth and Homarr are heavy or need extra setup. Pi-hole, Tailscale and
-Gangplank change how the host or router behaves. So only `full` or their own profiles start them.
+The AI stack, Pocket ID, Tinyauth and Homarr are heavy or need extra setup. Home automation and
+FlareSolverr are not needed by everyone. Pi-hole, Tailscale and Gangplank change how the host or
+router behaves. So only `full` or their own profiles start them.
 Configarr is in no group. It only runs when you call it, see Configarr under Media.
 
 ### Dependencies
@@ -637,7 +638,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -H "X-Api-Key: $SONARR_API_KEY" https:/
 #### [Home Assistant](https://www.home-assistant.io) ([definition](apps/automation/homeassistant.yaml))
 Home automation platform that runs locally and works with most smart home devices.
 - **Ports:** host (8123 by default)
-- **Profiles:** `homeassistant`, `automation`, `basic`, `default`, `full`
+- **Profiles:** `homeassistant`, `automation`, `full`
 - Proxied by Traefik at `https://homeassistant.${DOMAIN_NAME}`.
 
 Home Assistant rejects requests through Traefik until it trusts it as a proxy. Finish the first-run
@@ -648,7 +649,7 @@ setup at `http://<server ip>:8123`, then add `DOCKER_NETWORK_CIDR` from `.env` u
 #### [Homebridge](https://homebridge.io) ([definition](apps/automation/homebridge.yaml))
 Adds devices that don't support HomeKit to Apple Home.
 - **Ports:** host (8581 by default)
-- **Profiles:** `homebridge`, `automation`, `basic`, `default`, `full`
+- **Profiles:** `homebridge`, `automation`, `full`
 - Proxied by Traefik at `https://homebridge.${DOMAIN_NAME}`.
 
 ### Media
@@ -676,7 +677,7 @@ Manages Usenet and torrent indexers for the *arr apps.
 #### [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) ([definition](apps/media/flaresolverr.yaml))
 Solves Cloudflare challenges for Prowlarr indexers that use them.
 - **Ports:** none, reached by Prowlarr over the `traefik` network
-- **Profiles:** `flaresolverr`, `configarr`, `arrs`, `media`, `basic`, `default`, `full`
+- **Profiles:** `flaresolverr`, `configarr`, `full`
 
 Configarr adds it to Prowlarr as an indexer proxy with the `flaresolverr` tag. Prowlarr only uses it
 for indexers with the same tag, so add `flaresolverr` to each indexer behind a Cloudflare challenge.

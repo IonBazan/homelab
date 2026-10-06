@@ -3,7 +3,7 @@ services:
   flaresolverr:
     image: flaresolverr/flaresolverr:latest
     container_name: flaresolverr
-    profiles: ["flaresolverr", "configarr", "arrs", "media", "basic", "default", "full"]
+    profiles: ["flaresolverr", "configarr", "full"]
     environment:
       TZ: ${TZ}
     networks:

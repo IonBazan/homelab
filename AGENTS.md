@@ -66,7 +66,7 @@ diff against their neighbours.
 nest, so every service lists, in order: its app profile (the file name, shared by every service in
 that file), its category profiles, then the groups it belongs to:
 
-- `basic` — the everyday stack: media, arrs, vpn, automation, tools, network
+- `basic` — the everyday stack: media, arrs, vpn, tools, network
 - `default` — `basic` plus traefik
 - `full` — every long-running service, always included
 - `media` / `arrs` / `plex` / `jellyfin` — media servers, and the *arr apps that manage them

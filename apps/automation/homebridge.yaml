@@ -10,7 +10,7 @@ services:
         max-size: 10m
         max-file: "3"
     network_mode: host
-    profiles: ["homebridge", "automation", "basic", "default", "full"]
+    profiles: ["homebridge", "automation", "full"]
     volumes:
       - homebridge_data:/homebridge
     environment:
