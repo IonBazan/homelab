@@ -86,6 +86,6 @@ check absent  default  tinyauth
 check absent  full     configarr
 check present configarr configarr
 check present configarr sonarr
-check present configarr flaresolverr
+check absent  configarr flaresolverr
 
 echo "OK"

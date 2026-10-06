@@ -21,7 +21,6 @@ services:
       - sonarr
       - radarr
       - prowlarr
-      - flaresolverr
     # Run-once tool: it syncs TRaSH-Guides config into Sonarr/Radarr, wires up
     # Prowlarr's applications, download client and FlareSolverr proxy, and exits.
     # A restart policy would make Docker relaunch it every minute, so keep it "no".

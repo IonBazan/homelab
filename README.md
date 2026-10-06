@@ -212,7 +212,7 @@ Some profiles also start what the app needs to run:
 
 - `qbittorrent` starts Gluetun, whose network it uses.
 - `tinyauth` starts Pocket ID, its only login.
-- `configarr` starts Sonarr, Radarr, Prowlarr and FlareSolverr, which it configures.
+- `configarr` starts Sonarr, Radarr and Prowlarr, which it configures.
 - `auth` starts Traefik, the only way to reach Pocket ID and Tinyauth.
 
 Other links are optional. `sonarr` on its own starts only Sonarr.
@@ -771,15 +771,16 @@ categories `tv-sonarr` and `radarr`. It signs in with `QBITTORRENT_USERNAME` and
 sync with `.env`. Without `QBITTORRENT_PASSWORD` the client has no password and cannot connect.
 
 In **Prowlarr** it adds Sonarr and Radarr as applications with `fullSync`, the same qBittorrent
-client, and the FlareSolverr proxy tagged `flaresolverr`. Then it runs *Sync App Indexers* to push
+client, and the FlareSolverr proxy tagged `flaresolverr`. The proxy is only added while FlareSolverr
+is running; otherwise Configarr logs an error and carries on. Then it runs *Sync App Indexers* to push
 every Prowlarr indexer into both apps. It does not manage indexers. Add them in the Prowlarr UI and
 run Configarr again, or let Prowlarr's own sync handle them. The applications have no tags on
 purpose, because a tagged application only gets indexers with the same tag. Configarr deletes
 nothing, so anything you added by hand stays.
 
 It only runs when you call it. Naming a service on the command line turns on its profile, whatever
-`COMPOSE_PROFILES` says. It starts Sonarr, Radarr, Prowlarr and FlareSolverr if needed, applies the
-config and exits:
+`COMPOSE_PROFILES` says. It starts Sonarr, Radarr and Prowlarr if needed, applies the config and
+exits:
 
 ```bash
 docker compose run --rm configarr
