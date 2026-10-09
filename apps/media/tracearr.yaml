@@ -53,6 +53,10 @@ services:
     image: timescale/timescaledb-ha:pg18
     container_name: tracearr-db
     profiles: ["tracearr", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${TRACEARR_DB_MEMORY_LIMIT:-2G}
     command: postgres -c timescaledb.license=timescale -c timescaledb.telemetry_level=off
     environment:
       POSTGRES_USER: tracearr
@@ -78,6 +82,10 @@ services:
     image: redis:alpine
     container_name: tracearr-redis
     profiles: ["tracearr", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${TRACEARR_REDIS_MEMORY_LIMIT:-512M}
     volumes:
       - tracearr_redis_data:/data
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}

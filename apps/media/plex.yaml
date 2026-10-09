@@ -4,6 +4,10 @@ services:
     image: plexinc/pms-docker
     container_name: plex
     profiles: ["plex", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${PLEX_MEMORY_LIMIT:-2G}
     ports:
       - ${PLEX_PORT:-32400}:32400/tcp
       - 8324:8324/tcp

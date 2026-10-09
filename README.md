@@ -48,18 +48,20 @@ gluetun's `TORRENT_PORT`.
 #### Memory limits
 
 Most services have a memory limit, so one misbehaving container cannot starve the host. Override a
-limit with `<APP>_MEMORY_LIMIT` in `.env` (for example `RADARR_MEMORY_LIMIT=2G`).
+limit with `<SERVICE>_MEMORY_LIMIT` in `.env`, the service name in upper case with `_` for `-`
+(for example `RADARR_MEMORY_LIMIT=2G` or `TRACEARR_DB_MEMORY_LIMIT=4G`).
 
 | Limit | Services                                                       |
 |-------|----------------------------------------------------------------|
 | 64M   | ddns-updater                                                   |
 | 128M  | pocket-id, tinyauth, gangplank                                 |
-| 256M  | gluetun, traefik, tailscale                                    |
-| 512M  | bazarr, prowlarr, configarr, pihole, glances, homepage         |
+| 256M  | gluetun, traefik, tailscale, glances                           |
+| 512M  | bazarr, prowlarr, configarr, pihole, homepage, tracearr-redis  |
 | 1G    | radarr, sonarr, seerr, tracearr, homarr, homebridge            |
+| 2G    | plex, jellyfin, tracearr-db                                    |
 
-Services whose memory use grows with their workload have no limit: Ollama and Open WebUI, Plex and
-Jellyfin, Home Assistant, FlareSolverr, qBittorrent, and Tracearr's database and Redis.
+Services whose memory use grows with their workload have no limit: Ollama and Open WebUI, Home
+Assistant, FlareSolverr and qBittorrent.
 
 ### Portability
 

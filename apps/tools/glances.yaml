@@ -7,7 +7,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${GLANCES_MEMORY_LIMIT:-512M}
+          memory: ${GLANCES_MEMORY_LIMIT:-256M}
     pid: host
     environment:
       TZ: ${TZ}

@@ -48,10 +48,10 @@ diff against their neighbours.
 - Follow `restart:` with the same `logging:` block every service uses (`json-file`, `max-size: 10m`,
   `max-file: "3"`). Compose has no stack-wide default, so each service carries it.
 - Give a service a memory limit right after `profiles:`, as `deploy.resources.limits.memory:
-  ${<APP>_MEMORY_LIMIT:-<default>}`, with a default comfortably above its normal use. Leave it off
-  services whose memory grows with their workload (databases, caches, AI, media servers, browsers,
-  torrent clients). Don't add the variable to `.env.example`; add the service to the table under
-  "Memory limits" in the README.
+  ${<SERVICE>_MEMORY_LIMIT:-<default>}`, with a default comfortably above its normal use. Databases,
+  caches and media servers get a generous limit (512M to 2G). Leave it off services whose memory
+  grows without a clear ceiling (AI, browsers, torrent clients, Home Assistant). Don't add the
+  variable to `.env.example`; add the service to the table under "Memory limits" in the README.
 - Use map syntax for `environment:` (`KEY: value`).
 - Declare named volumes in a `volumes:` block at the bottom of the same app file, prefixed with
   the app name (`radarr_data`, `tracearr_db_data`).

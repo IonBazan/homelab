@@ -4,6 +4,10 @@ services:
     image: jellyfin/jellyfin
     container_name: jellyfin
     profiles: ["jellyfin", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${JELLYFIN_MEMORY_LIMIT:-2G}
     environment:
       TZ: ${TZ}
     volumes:
