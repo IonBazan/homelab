@@ -4,6 +4,10 @@ services:
     image: qmcgaw/gluetun
     container_name: gluetun
     profiles: ["gluetun", "qbittorrent", "vpn", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${GLUETUN_MEMORY_LIMIT:-256M}
     cap_add:
       - NET_ADMIN
     env_file:

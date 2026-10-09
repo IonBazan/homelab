@@ -4,6 +4,10 @@ services:
     image: ghcr.io/connorgallopo/tracearr:latest
     container_name: tracearr
     profiles: ["tracearr", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${TRACEARR_MEMORY_LIMIT:-1G}
     environment:
       TZ: ${TZ}
       DATABASE_URL: postgres://tracearr:${TRACEARR_DB_PASSWORD:-tracearr}@tracearr-db:5432/tracearr

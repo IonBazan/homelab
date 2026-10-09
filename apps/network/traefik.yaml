@@ -4,6 +4,10 @@ services:
     container_name: traefik
     image: traefik:3
     profiles: ["traefik", "auth", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${TRAEFIK_MEMORY_LIMIT:-256M}
     ports:
       - published: 80
         target: 80

@@ -6,6 +6,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     profiles: ["gangplank", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${GANGPLANK_MEMORY_LIMIT:-128M}
     command: forward
     environment:
       TZ: ${TZ}

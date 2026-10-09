@@ -4,6 +4,10 @@ services:
     image: linuxserver/bazarr
     container_name: bazarr
     profiles: ["bazarr", "arrs", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${BAZARR_MEMORY_LIMIT:-512M}
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

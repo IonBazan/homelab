@@ -4,6 +4,10 @@ services:
     container_name: sonarr
     image: linuxserver/sonarr
     profiles: ["sonarr", "configarr", "arrs", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${SONARR_MEMORY_LIMIT:-1G}
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

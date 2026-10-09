@@ -4,6 +4,10 @@ services:
     container_name: homarr
     image: ghcr.io/homarr-labs/homarr:latest
     profiles: ["homarr", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${HOMARR_MEMORY_LIMIT:-1G}
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
     logging:
       driver: json-file

@@ -4,6 +4,10 @@ services:
     image: configarr/configarr:latest
     container_name: configarr
     profiles: ["configarr"]
+    deploy:
+      resources:
+        limits:
+          memory: ${CONFIGARR_MEMORY_LIMIT:-512M}
     environment:
       TZ: ${TZ}
       SONARR_API_KEY: ${SONARR_API_KEY:-}

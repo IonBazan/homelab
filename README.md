@@ -45,6 +45,22 @@ Some ports cannot go through Traefik, so they are always published: Traefik's ow
 `8443` (`TRAEFIK_PUBLIC_PORT`), Pi-hole's DNS on `53`, Plex's `32400` and its discovery ports, and
 gluetun's `TORRENT_PORT`.
 
+#### Memory limits
+
+Most services have a memory limit, so one misbehaving container cannot starve the host. Override a
+limit with `<APP>_MEMORY_LIMIT` in `.env` (for example `RADARR_MEMORY_LIMIT=2G`).
+
+| Limit | Services                                                       |
+|-------|----------------------------------------------------------------|
+| 64M   | ddns-updater                                                   |
+| 128M  | pocket-id, tinyauth, gangplank                                 |
+| 256M  | gluetun, traefik, tailscale                                    |
+| 512M  | bazarr, prowlarr, configarr, pihole, glances, homepage         |
+| 1G    | radarr, sonarr, seerr, tracearr, homarr, homebridge            |
+
+Services whose memory use grows with their workload have no limit: Ollama and Open WebUI, Plex and
+Jellyfin, Home Assistant, FlareSolverr, qBittorrent, and Tracearr's database and Redis.
+
 ### Portability
 
 Copy the files to any Linux machine with Docker, run `scripts/setup-env.sh`, fill in the few values

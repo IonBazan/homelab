@@ -4,6 +4,10 @@ services:
     image: qmcgaw/ddns-updater
     container_name: ddns-updater
     profiles: ["ddns-updater", "network", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${DDNS_UPDATER_MEMORY_LIMIT:-64M}
     environment:
       TZ: ${TZ}
       ROOT_URL: /

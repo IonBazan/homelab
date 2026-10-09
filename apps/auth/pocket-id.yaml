@@ -4,7 +4,12 @@ services:
     image: pocketid/pocket-id:v2
     container_name: pocket-id
     profiles: ["pocket-id", "tinyauth", "auth", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${POCKET_ID_MEMORY_LIMIT:-128M}
     environment:
+      GOMEMLIMIT: 100MiB
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ}

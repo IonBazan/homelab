@@ -4,6 +4,10 @@ services:
     image: tailscale/tailscale:stable
     container_name: tailscale
     profiles: ["tailscale", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${TAILSCALE_MEMORY_LIMIT:-256M}
     cap_add:
       - NET_ADMIN
       - NET_RAW

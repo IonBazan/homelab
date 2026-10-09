@@ -4,6 +4,10 @@ services:
     container_name: radarr
     image: linuxserver/radarr
     profiles: ["radarr", "configarr", "arrs", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${RADARR_MEMORY_LIMIT:-1G}
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

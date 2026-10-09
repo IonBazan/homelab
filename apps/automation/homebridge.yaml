@@ -11,6 +11,10 @@ services:
         max-file: "3"
     network_mode: host
     profiles: ["homebridge", "automation", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${HOMEBRIDGE_MEMORY_LIMIT:-1G}
     volumes:
       - homebridge_data:/homebridge
     environment:

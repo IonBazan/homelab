@@ -4,6 +4,10 @@ services:
     image: seerr/seerr:latest
     container_name: seerr
     profiles: ["seerr", "arrs", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${SEERR_MEMORY_LIMIT:-1G}
     init: true
     security_opt:
       - no-new-privileges

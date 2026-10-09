@@ -4,6 +4,10 @@ services:
     image: linuxserver/prowlarr
     container_name: prowlarr
     profiles: ["prowlarr", "configarr", "arrs", "media", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${PROWLARR_MEMORY_LIMIT:-512M}
     environment:
       PUID: ${PUID}
       PGID: ${PGID}

@@ -4,6 +4,10 @@ services:
     image: gethomepage/homepage:latest
     container_name: homepage
     profiles: ["homepage", "tools", "basic", "default", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${HOMEPAGE_MEMORY_LIMIT:-512M}
     environment:
       HOMEPAGE_ALLOWED_HOSTS: home.${DOMAIN_NAME},${DOMAIN_NAME},${PHYSICAL_SERVER_IP}:${HOMEPAGE_PORT:-3002}
       HOMEPAGE_VAR_WEATHER_LATITUDE: ${WEATHER_LATITUDE:-1.3521}

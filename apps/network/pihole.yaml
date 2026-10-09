@@ -10,6 +10,10 @@ services:
         max-size: 10m
         max-file: "3"
     profiles: ["pihole", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${PIHOLE_MEMORY_LIMIT:-512M}
     ports:
       - 53:53/tcp
       - 53:53/udp

@@ -4,6 +4,10 @@ services:
     image: ghcr.io/tinyauthapp/tinyauth:v5-distroless
     container_name: tinyauth
     profiles: ["tinyauth", "auth", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${TINYAUTH_MEMORY_LIMIT:-128M}
     environment:
       TINYAUTH_APPURL: https://tinyauth.${DOMAIN_NAME}
       TINYAUTH_AUTH_SECURECOOKIE: true
