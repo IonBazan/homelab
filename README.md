@@ -214,12 +214,12 @@ There are three kinds of profile:
 | Group | Starts | Use it when |
 | --- | --- | --- |
 | `basic` | Media servers, the *arr apps, Seerr, Tracearr, qBittorrent behind the VPN, Homepage, Glances and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
-| `default` | Everything in `basic`, plus Traefik | The usual setup, and the value `.env.example` ships with |
-| `full` | Every long-running service in the repo, including home automation, FlareSolverr, AI, Pocket ID, Tinyauth, Homarr, Pi-hole, Tailscale and Gangplank | The host is dedicated to this stack and you want all of it |
+| `default` | Everything in `basic`, plus Traefik and Tailscale | The usual setup, and the value `.env.example` ships with |
+| `full` | Every long-running service in the repo, including home automation, FlareSolverr, AI, Pocket ID, Tinyauth, Homarr, Pi-hole and Gangplank | The host is dedicated to this stack and you want all of it |
 
 The AI stack, Pocket ID, Tinyauth and Homarr are heavy or need extra setup. Home automation and
-FlareSolverr are not needed by everyone. Pi-hole, Tailscale and Gangplank change how the host or
-router behaves. So only `full` or their own profiles start them.
+FlareSolverr are not needed by everyone. Pi-hole and Gangplank change how the host or router
+behaves. So only `full` or their own profiles start them.
 Configarr is in no group. It only runs when you call it, see Configarr under Media.
 
 ### Dependencies
@@ -848,7 +848,7 @@ Network-wide ad blocker. Routing does not need it (see [Networking](#networking)
 #### [Tailscale](https://tailscale.com) ([definition](apps/network/tailscale.yaml))
 VPN built on WireGuard that connects your devices. Here it gives you access to the LAN from anywhere.
 - **Ports:** host
-- **Profiles:** `tailscale`, `full`
+- **Profiles:** `tailscale`, `default`, `full`
 
 It runs as a subnet router. `TS_ROUTES` advertises `PHYSICAL_SERVER_NETWORK`, so devices on your
 tailnet can reach LAN addresses, including `PHYSICAL_SERVER_IP`, through this node. After the first

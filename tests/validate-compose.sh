@@ -55,6 +55,8 @@ check present traefik  traefik
 check absent all       pihole
 check present pihole   pihole
 check absent all       tailscale
+check present default  tailscale
+check absent  basic    tailscale
 check present tailscale tailscale
 check present full     homarr
 check present homarr   homarr

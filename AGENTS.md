@@ -72,7 +72,7 @@ nest, so every service lists, in order: its app profile (the file name, shared b
 that file), its category profiles, then the groups it belongs to:
 
 - `basic` — the everyday stack: media, arrs, vpn, tools, network
-- `default` — `basic` plus traefik
+- `default` — `basic` plus traefik and tailscale
 - `full` — every long-running service, always included
 - `media` / `arrs` / `plex` / `jellyfin` — media servers, and the *arr apps that manage them
 - `vpn` — anything that must sit behind gluetun
