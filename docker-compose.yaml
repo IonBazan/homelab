@@ -24,6 +24,7 @@ include:
   - apps/media/prowlarr.yaml
   - apps/media/flaresolverr.yaml
   - apps/media/qbittorrent.yaml
+  - apps/media/sabnzbd.yaml
   - apps/media/bazarr.yaml
   - apps/media/configarr.yaml
   - apps/media/tracearr.yaml

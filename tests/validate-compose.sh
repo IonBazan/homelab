@@ -27,7 +27,7 @@ docker compose --env-file /dev/null config --quiet
 COMPOSE_FILE=docker-compose.yaml:docker-compose.ports.yaml \
   docker compose --env-file /dev/null config --quiet
 TINYAUTH_ENABLED=true docker compose --env-file /dev/null config --quiet
-for script in scripts/*.sh apps/config/qbittorrent/webui-login.sh; do bash -n "$script"; done
+for script in scripts/*.sh apps/config/qbittorrent/webui-login.sh apps/config/sabnzbd/init.sh; do bash -n "$script"; done
 
 { set +x; } 2>/dev/null
 
@@ -86,6 +86,8 @@ check present tinyauth pocket-id
 check absent  tinyauth traefik
 check absent  default  tinyauth
 check absent  full     configarr
+check present full     sabnzbd
+check absent  default  sabnzbd
 check present configarr configarr
 check present configarr sonarr
 check absent  configarr flaresolverr

@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  sabnzbd:
+    image: linuxserver/sabnzbd
+    container_name: sabnzbd
+    profiles: ["sabnzbd", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${SABNZBD_MEMORY_LIMIT:-1G}
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      HOST_WHITELIST: sabnzbd, sabnzbd.${DOMAIN_NAME}
+      SABNZBD_API_KEY: ${SABNZBD_API_KEY:-}
+    volumes:
+      - sabnzbd_data:/config
+      - myMedia:/media
+      - ../config/sabnzbd/init.sh:/custom-cont-init.d/sabnzbd-init.sh:ro
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - traefik
+    labels:
+      traefik.enable: true
+      traefik.http.services.sabnzbd.loadbalancer.server.port: 8080
+      traefik.http.routers.sabnzbd.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+      tinyauth.apps.sabnzbd.config.domain: sabnzbd.${DOMAIN_NAME}
+      tinyauth.apps.sabnzbd.path.allow: ^/(sabnzbd/)?api
+      homepage.group: Media Management
+      homepage.name: SABnzbd
+      homepage.icon: sh-sabnzbd.webp
+      homepage.href: //sabnzbd.${DOMAIN_NAME}
+      homepage.description: Usenet client
+      homepage.widget.type: sabnzbd
+      homepage.widget.url: http://sabnzbd:8080
+      homepage.widget.key: ${SABNZBD_API_KEY:-}
+
+volumes:
+  sabnzbd_data:

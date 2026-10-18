@@ -240,6 +240,7 @@ GEN=(
   "RADARR_API_KEY                rand_hex 16"
   "PROWLARR_API_KEY              rand_hex 16"
   "BAZARR_API_KEY                rand_hex 16"
+  "SABNZBD_API_KEY               rand_hex 16"
   "QBITTORRENT_PASSWORD          rand_pass"
   "PIHOLE_PASSWORD               rand_pass"
   "TRACEARR_DB_PASSWORD          rand_pass"

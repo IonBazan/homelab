@@ -44,7 +44,6 @@ services:
       homepage.widget.type: radarr
       homepage.widget.url: http://radarr:7878
       homepage.widget.key: ${RADARR_API_KEY:-}
-      homepage.widget.enableQueue: true
 
 volumes:
   radarr_data:

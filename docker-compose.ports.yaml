@@ -49,6 +49,10 @@ services:
     ports:
       - ${SONARR_PORT:-8989}:8989/tcp
 
+  sabnzbd:
+    ports:
+      - ${SABNZBD_PORT:-8080}:8080/tcp
+
   bazarr:
     ports:
       - ${BAZARR_PORT:-6767}:6767/tcp
