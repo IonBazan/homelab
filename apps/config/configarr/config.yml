@@ -37,6 +37,11 @@ sonarr:
       - from: WEB-1080p
         to: WEB-1080p (x265)
 
+    release_profiles:
+      - name: No DTS
+        ignored:
+          - /\bDTS\b/i
+
     custom_formats: []
 
     download_clients:
@@ -67,6 +72,11 @@ radarr:
     cloneQualityProfiles:
       - from: HD Bluray + WEB
         to: WEB-1080p (x265)
+
+    release_profiles:
+      - name: No DTS
+        ignored:
+          - /\bDTS\b/i
 
     custom_formats: []
 
