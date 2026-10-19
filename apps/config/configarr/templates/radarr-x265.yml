@@ -2,10 +2,12 @@
 # x265 at 2000 outranks any x264 WEB-DL (Tier 01 tops out at 1700).
 # Streaming services score 0, since the tag says nothing about quality and is often missing.
 # LQ is unblocked because it lists most 1080p x265 groups (MeGusta, PSA, Pahe, Tigole).
+# The cutoff score is 0, so any accepted release ends upgrades: x265 wins when grabbing, but an x264 already on disk stays.
 quality_profiles:
   - name: WEB-1080p (x265)
     upgrade:
       until_quality: WEB 1080p
+      until_score: 0
     qualities:
       - name: WEB 1080p
         qualities:
