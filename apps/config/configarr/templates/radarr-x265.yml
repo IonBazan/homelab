@@ -1,0 +1,30 @@
+# "WEB-1080p (x265)" is cloned in config.yml from TRaSH's HD Bluray + WEB and limited here to WEB 1080p.
+# x265 at 2000 outranks any x264 WEB-DL (Tier 01 plus streaming boosts stays under 1900).
+# LQ is unblocked because it lists most 1080p x265 groups (MeGusta, PSA, Pahe, Tigole).
+quality_profiles:
+  - name: WEB-1080p (x265)
+    upgrade:
+      until_quality: WEB 1080p
+    qualities:
+      - name: WEB 1080p
+        qualities:
+          - WEBDL-1080p
+          - WEBRip-1080p
+
+custom_formats:
+  - trash_ids:
+      - dc98083864ea246d05a42df0d05f81cc # x265 (HD)
+    assign_scores_to:
+      - name: WEB-1080p (x265)
+        score: 2000
+  - trash_ids:
+      - 90a6f9a284dff5103f6346090e6280c8 # LQ
+      - e204b80c87be9497a8a6eaff48f72905 # LQ (Release Title)
+    assign_scores_to:
+      - name: WEB-1080p (x265)
+        score: 0
+  - trash_ids:
+      - 9170d55c319f4fe40da8711ba9d8050d # x265
+    assign_scores_to:
+      - name: Any
+        score: 100

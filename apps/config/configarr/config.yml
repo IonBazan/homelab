@@ -1,5 +1,6 @@
 trashGuideUrl: https://github.com/TRaSH-Guides/Guides
 recyclarrConfigUrl: https://github.com/recyclarr/config-templates
+localConfigTemplatesPath: /app/config/templates
 
 x-download-clients:
   qbittorrent: &qbittorrent
@@ -30,6 +31,11 @@ sonarr:
       - template: sonarr-quality-definition-series
       - template: sonarr-v4-quality-profile-web-1080p
       - template: sonarr-v4-custom-formats-web-1080p
+      - template: sonarr-x265
+
+    cloneQualityProfiles:
+      - from: WEB-1080p
+        to: WEB-1080p (x265)
 
     custom_formats: []
 
@@ -56,6 +62,11 @@ radarr:
       - template: radarr-quality-definition-movie
       - template: radarr-quality-profile-hd-bluray-web
       - template: radarr-custom-formats-hd-bluray-web
+      - template: radarr-x265
+
+    cloneQualityProfiles:
+      - from: HD Bluray + WEB
+        to: WEB-1080p (x265)
 
     custom_formats: []
 
