@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
   tracearr:
-    image: ghcr.io/connorgallopo/tracearr:latest
+    image: ghcr.io/connorgallopo/tracearr:next
     container_name: tracearr
     profiles: ["tracearr", "media", "basic", "default", "full"]
     deploy:

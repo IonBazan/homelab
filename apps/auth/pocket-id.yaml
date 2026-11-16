@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
 services:
   pocket-id:
-    image: pocketid/pocket-id:v2
+    image: pocketid/pocket-id:next
     container_name: pocket-id
     profiles: ["pocket-id", "tinyauth", "auth", "full"]
     deploy:

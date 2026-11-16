@@ -2,7 +2,7 @@
 services:
   sonarr:
     container_name: sonarr
-    image: linuxserver/sonarr
+    image: linuxserver/sonarr:develop
     profiles: ["sonarr", "configarr", "arrs", "media", "basic", "default", "full"]
     deploy:
       resources:

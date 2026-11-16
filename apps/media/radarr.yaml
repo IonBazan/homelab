@@ -2,7 +2,7 @@
 services:
   radarr:
     container_name: radarr
-    image: linuxserver/radarr
+    image: linuxserver/radarr:develop
     profiles: ["radarr", "configarr", "arrs", "media", "basic", "default", "full"]
     deploy:
       resources:
