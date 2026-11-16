@@ -55,7 +55,7 @@ limit with `<SERVICE>_MEMORY_LIMIT` in `.env`, the service name in upper case wi
 |-------|----------------------------------------------------------------|
 | 64M   | ddns-updater                                                   |
 | 128M  | pocket-id, tinyauth, gangplank                                 |
-| 256M  | gluetun, traefik, tailscale, glances                           |
+| 256M  | gluetun, traefik, tailscale, glances, upsnap                   |
 | 512M  | bazarr, prowlarr, configarr, pihole, homepage, tracearr-redis  |
 | 1G    | radarr, sonarr, sabnzbd, seerr, tracearr, homarr, homebridge   |
 | 2G    | plex, jellyfin, tracearr-db                                    |
@@ -70,7 +70,7 @@ it cannot guess, and run `docker compose up -d`. There are no makefiles and no A
 scripts in `scripts/` are optional helpers for the first run.
 
 Several apps need Linux features that Docker Desktop on macOS or Windows does not provide: host
-networking (Home Assistant, Homebridge, Tailscale, Gangplank), `/run/dbus`, `/dev/net/tun` and
+networking (Home Assistant, Homebridge, Tailscale, Gangplank, UpSnap), `/run/dbus`, `/dev/net/tun` and
 Plex's `/dev/dri`. On a host without an Intel or AMD GPU, remove the `devices` and `group_add`
 lines from [`plex.yaml`](apps/media/plex.yaml), otherwise Plex does not start.
 
@@ -128,6 +128,7 @@ flowchart TB
         homepage@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/homepage.png", label: "Homepage", pos: "b", w: 40, h: 40, constraint: "on" }
         homarr@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/homarr.png", label: "Homarr", pos: "b", w: 40, h: 40, constraint: "on" }
         glances@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/glances.png", label: "Glances", pos: "b", w: 40, h: 40, constraint: "on" }
+        upsnap@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/upsnap.png", label: "UpSnap", pos: "b", w: 40, h: 40, constraint: "on" }
     end
 
     subgraph media["Media"]
@@ -218,11 +219,11 @@ There are three kinds of profile:
 | --- | --- | --- |
 | `basic` | Media servers, the *arr apps, Seerr, Tracearr, qBittorrent behind the VPN, Homepage, Glances and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
 | `default` | Everything in `basic`, plus Traefik and Tailscale | The usual setup, and the value `.env.example` ships with |
-| `full` | Every long-running service in the repo, including home automation, FlareSolverr, AI, Pocket ID, Tinyauth, Homarr, Pi-hole and Gangplank | The host is dedicated to this stack and you want all of it |
+| `full` | Every long-running service in the repo, including home automation, FlareSolverr, AI, Pocket ID, Tinyauth, Homarr, UpSnap, Pi-hole and Gangplank | The host is dedicated to this stack and you want all of it |
 
 The AI stack, Pocket ID, Tinyauth and Homarr are heavy or need extra setup. Home automation and
 FlareSolverr are not needed by everyone. Pi-hole and Gangplank change how the host or router
-behaves. So only `full` or their own profiles start them.
+behaves, and UpSnap needs the host network. So only `full` or their own profiles start them.
 Configarr is in no group. It only runs when you call it, see Configarr under Media.
 
 ### Dependencies
@@ -964,6 +965,16 @@ It uses the host's process namespace and the Docker socket, so CPU, memory, disk
 are the host's. Network numbers are the container's own, because it stays on the `traefik` network.
 The web UI has no login of its own (only Tinyauth's, when `TINYAUTH_ENABLED` is set), so keep it off
 the public internet.
+
+#### [UpSnap](https://github.com/seriousm4x/UpSnap) ([definition](apps/tools/upsnap.yaml))
+Wakes, pings and shuts down devices on the LAN, with a device scan to add them.
+- **Ports:** host (8090 by default)
+- **Profiles:** `upsnap`, `tools`, `full`
+- Proxied by Traefik at `https://upsnap.${DOMAIN_NAME}`.
+
+Wake-on-LAN packets only reach the LAN from the host network, so it runs with `network_mode: host`
+and only the `NET_RAW` capability. Open it once to create the admin account, then set the scan range
+under Settings.
 
 ## Testing
 

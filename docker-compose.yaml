@@ -33,6 +33,7 @@ include:
   - apps/tools/homepage.yaml
   - apps/tools/homarr.yaml
   - apps/tools/glances.yaml
+  - apps/tools/upsnap.yaml
 
 networks:
   traefik:

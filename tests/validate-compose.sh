@@ -91,5 +91,8 @@ check absent  default  sabnzbd
 check present configarr configarr
 check present configarr sonarr
 check absent  configarr flaresolverr
+check present tools    upsnap
+check present full     upsnap
+check absent  default  upsnap
 
 echo "OK"

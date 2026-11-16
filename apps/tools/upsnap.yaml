@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  upsnap:
+    image: seriousm4x/upsnap
+    container_name: upsnap
+    profiles: ["upsnap", "tools", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${UPSNAP_MEMORY_LIMIT:-256M}
+    network_mode: host
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - upsnap_data:/app/pb_data
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    labels:
+      traefik.enable: true
+      traefik.http.services.upsnap.loadbalancer.server.url: http://host.docker.internal:8090
+      homepage.group: Tools
+      homepage.name: UpSnap
+      homepage.icon: sh-upsnap.webp
+      homepage.href: //upsnap.${DOMAIN_NAME}
+      homepage.description: Wake-on-LAN
+
+volumes:
+  upsnap_data:
