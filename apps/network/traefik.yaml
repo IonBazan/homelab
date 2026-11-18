@@ -71,7 +71,7 @@ services:
       traefik.http.routers.traefik-api.service: api@internal
       traefik.http.routers.traefik-api.entrypoints: web
       traefik.http.routers.traefik-api.middlewares: traefik-api-internal
-      traefik.http.middlewares.traefik-api-internal.ipallowlist.sourcerange: 127.0.0.1/32,${DOCKER_NETWORK_CIDR:-172.16.0.0/12}
+      traefik.http.middlewares.traefik-api-internal.ipallowlist.sourcerange: 127.0.0.1/32,${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
       # http->https redirect, scoped to ${DOMAIN_NAME} + its subdomains (replaces the
       # blanket entrypoint redirect so foreign hosts stay on :80 for the catch-all).
       traefik.http.routers.https-redirect.rule: HostRegexp(`^(.+\.)?${DOMAIN_NAME}$$`)

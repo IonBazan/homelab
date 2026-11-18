@@ -291,8 +291,7 @@ scripts/setup-env.sh
 - creates `.env` from `.env.example`;
 - generates every random secret: the `*_API_KEY`s, the encryption keys, the Tracearr secrets and
   the qBittorrent, Pi-hole and Tracearr database passwords;
-- detects `PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`, `PUID`, `PGID` and `RENDER_GID`, and
-  `DOCKER_NETWORK_CIDR` once the `traefik` network exists;
+- detects `PHYSICAL_SERVER_IP`, `PHYSICAL_SERVER_NETWORK`, `TZ`, `PUID`, `PGID` and `RENDER_GID`;
 - sets an empty `COMPOSE_PROFILES` to `default`, since an empty value starts nothing;
 - with Pocket ID in the profiles, generates the Open WebUI and Homarr client secrets, and with
   Tinyauth, sets `TINYAUTH_ENABLED=true`;
@@ -344,7 +343,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | _(auto)_ Used only with the `auth` or `tinyauth` profile. `scripts/pocket-id-clients.sh` registers it in Pocket ID. `TINYAUTH_OIDC_CLIENT_ID` is optional and defaults to `tinyauth`. |
 | `POCKET_ID_STATIC_API_KEY` | Pocket ID client setup | _(auto)_ Admin API key `scripts/pocket-id-clients.sh` uses to register clients. |
 | `OPEN_WEBUI_OIDC_CLIENT_SECRET` / `HOMARR_OIDC_CLIENT_SECRET` | Pocket ID sign-in | _(auto)_ Generated only when Pocket ID is in the profiles, see Pocket ID below. |
-| `DOCKER_NETWORK_CIDR` | Traefik API, qBittorrent, Pocket ID, Tinyauth | _(auto once the `traefik` network exists)_ Its subnet, trusted as a proxy. Defaults to `172.16.0.0/12`, which covers Docker's default address pools. |
+| `DOCKER_NETWORK_CIDR` | Traefik API, qBittorrent, Pocket ID, Tinyauth, Open WebUI, Tracearr, Homarr, Sonarr, Radarr, Prowlarr | **Optional.** Subnet of the `traefik` network, trusted as a proxy. Defaults to `172.21.0.0/16`; change it if that range clashes with another network on the host. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Used only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | _(auto)_ `getent group render \| cut -d: -f3` on the host. |
 | `WEATHER_LATITUDE` / `WEATHER_LONGITUDE` | Homepage weather | **Optional.** Your location for the weather widget. |

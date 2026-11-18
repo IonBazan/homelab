@@ -38,6 +38,9 @@ include:
 networks:
   traefik:
     name: traefik
+    ipam:
+      config:
+        - subnet: ${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
   vpn:
     name: vpn
 

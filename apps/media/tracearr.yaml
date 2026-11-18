@@ -14,6 +14,7 @@ services:
       REDIS_URL: redis://tracearr-redis:6379
       JWT_SECRET: ${TRACEARR_JWT_SECRET}
       COOKIE_SECRET: ${TRACEARR_COOKIE_SECRET}
+      TRUST_PROXY: ${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
     depends_on:
       tracearr-db:
         condition: service_healthy

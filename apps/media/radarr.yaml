@@ -14,6 +14,7 @@ services:
       TZ: ${TZ}
       RADARR__AUTH__APIKEY: ${RADARR_API_KEY:-}
       RADARR__AUTH__METHOD: ${TINYAUTH_ENABLED:+External}
+      RADARR__SERVER__TRUSTEDNETWORKS: ${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
     volumes:
       - radarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/radarr:/config/Backups

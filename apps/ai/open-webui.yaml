@@ -14,6 +14,7 @@ services:
       OAUTH_PROVIDER_NAME: Pocket ID
       ENABLE_OAUTH_SIGNUP: ${OPEN_WEBUI_OIDC_CLIENT_SECRET:+true}
       OAUTH_MERGE_ACCOUNTS_BY_EMAIL: ${OPEN_WEBUI_OIDC_CLIENT_SECRET:+true}
+      FORWARDED_ALLOW_IPS: ${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
     networks:
       - traefik
     restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}

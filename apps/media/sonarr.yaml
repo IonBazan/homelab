@@ -14,6 +14,7 @@ services:
       TZ: ${TZ}
       SONARR__AUTH__APIKEY: ${SONARR_API_KEY:-}
       SONARR__AUTH__METHOD: ${TINYAUTH_ENABLED:+External}
+      SONARR__SERVER__TRUSTEDNETWORKS: ${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
     volumes:
       - sonarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/sonarr:/config/Backups

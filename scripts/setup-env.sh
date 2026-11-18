@@ -4,8 +4,7 @@
 #   * create .env from .env.example (if missing)
 #   * fill every blank secret that can be random - API keys, encryption/JWT
 #     secrets, qBittorrent + Pi-hole + Tracearr DB passwords
-#   * detect host values - LAN IP, LAN CIDR, timezone, PUID/PGID, render group,
-#     and the traefik Docker network's subnet once it exists
+#   * detect host values - LAN IP, LAN CIDR, timezone, PUID/PGID, render group
 #   * set TINYAUTH_ENABLED=true when the auth, tinyauth or full profile is selected
 #   * generate the Open WebUI and Homarr Pocket ID client secrets when Pocket ID
 #     is in the profiles
@@ -161,10 +160,6 @@ else
 fi
 if command -v getent >/dev/null 2>&1; then
   fill_detected RENDER_GID "$(getent group render | cut -d: -f3)"
-fi
-if docker network inspect traefik >/dev/null 2>&1; then
-  fill_detected DOCKER_NETWORK_CIDR "$(docker network inspect traefik \
-    --format '{{range .IPAM.Config}}{{println .Subnet}}{{end}}' | grep -m1 '\.')"
 fi
 
 echo

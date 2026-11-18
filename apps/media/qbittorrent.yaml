@@ -11,7 +11,7 @@ services:
       WEBUI_PORT: 8081
       QBITTORRENT_USERNAME: ${QBITTORRENT_USERNAME:-admin}
       QBITTORRENT_PASSWORD: ${QBITTORRENT_PASSWORD:-}
-      TRUSTED_PROXIES: ${DOCKER_NETWORK_CIDR:-172.16.0.0/12}
+      TRUSTED_PROXIES: ${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
     volumes:
       - qbittorrent_data:/config
       - myMedia:/media
