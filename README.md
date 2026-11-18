@@ -344,7 +344,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | _(auto)_ Used only with the `auth` or `tinyauth` profile. `scripts/pocket-id-clients.sh` registers it in Pocket ID. `TINYAUTH_OIDC_CLIENT_ID` is optional and defaults to `tinyauth`. |
 | `POCKET_ID_STATIC_API_KEY` | Pocket ID client setup | _(auto)_ Admin API key `scripts/pocket-id-clients.sh` uses to register clients. |
 | `OPEN_WEBUI_OIDC_CLIENT_SECRET` / `HOMARR_OIDC_CLIENT_SECRET` | Pocket ID sign-in | _(auto)_ Generated only when Pocket ID is in the profiles, see Pocket ID below. |
-| `DOCKER_NETWORK_CIDR` | Traefik API, qBittorrent | _(auto once the `traefik` network exists)_ Its subnet, trusted as a proxy. Defaults to `172.16.0.0/12`, which covers Docker's default address pools. |
+| `DOCKER_NETWORK_CIDR` | Traefik API, qBittorrent, Pocket ID, Tinyauth | _(auto once the `traefik` network exists)_ Its subnet, trusted as a proxy. Defaults to `172.16.0.0/12`, which covers Docker's default address pools. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Used only with the `pihole` profile. |
 | `RENDER_GID` | Plex HW transcode | _(auto)_ `getent group render \| cut -d: -f3` on the host. |
 | `WEATHER_LATITUDE` / `WEATHER_LONGITUDE` | Homepage weather | **Optional.** Your location for the weather widget. |

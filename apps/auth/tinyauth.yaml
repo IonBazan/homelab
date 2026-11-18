@@ -20,6 +20,7 @@ services:
       TINYAUTH_OAUTH_PROVIDERS_POCKETID_USERINFOURL: https://id.${DOMAIN_NAME}/api/oidc/userinfo
       TINYAUTH_OAUTH_PROVIDERS_POCKETID_REDIRECTURL: https://tinyauth.${DOMAIN_NAME}/api/oauth/callback/pocketid
       TINYAUTH_OAUTH_PROVIDERS_POCKETID_SCOPES: openid,email,profile,groups
+      TINYAUTH_AUTH_TRUSTEDPROXIES: ${DOCKER_NETWORK_CIDR:-172.16.0.0/12}
     volumes:
       - tinyauth_data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
