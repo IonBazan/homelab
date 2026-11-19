@@ -35,6 +35,9 @@ services:
       traefik.enable: true
       traefik.http.services.radarr.loadbalancer.server.port: 7878
       traefik.http.routers.radarr.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+      traefik.http.routers.radarr-tunnel.rule: Host(`radarr.${TUNNEL_DOMAIN}`)
+      traefik.http.routers.radarr-tunnel.entrypoints: tunnel
+      traefik.http.routers.radarr-tunnel.service: radarr
       tinyauth.apps.radarr.config.domain: radarr.${DOMAIN_NAME}
       tinyauth.apps.radarr.path.allow: ^/(api|feed|ping)
       homepage.group: Media Management

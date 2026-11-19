@@ -36,6 +36,9 @@ services:
       traefik.enable: true
       traefik.http.services.bazarr.loadbalancer.server.port: 6767
       traefik.http.routers.bazarr.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+      traefik.http.routers.bazarr-tunnel.rule: Host(`bazarr.${TUNNEL_DOMAIN}`)
+      traefik.http.routers.bazarr-tunnel.entrypoints: tunnel
+      traefik.http.routers.bazarr-tunnel.service: bazarr
       tinyauth.apps.bazarr.config.domain: bazarr.${DOMAIN_NAME}
       tinyauth.apps.bazarr.path.allow: ^/api
       homepage.group: Media Management

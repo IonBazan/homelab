@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  cloudflared:
+    image: cloudflare/cloudflared
+    container_name: cloudflared
+    profiles: ["cloudflared", "full"]
+    deploy:
+      resources:
+        limits:
+          memory: ${CLOUDFLARED_MEMORY_LIMIT:-128M}
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - traefik
+    restart: ${UNIVERSAL_RESTART_POLICY:-unless-stopped}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

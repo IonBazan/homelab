@@ -1,3 +1,33 @@
 # Services are discovered automatically from `homepage.*` labels on the
 # containers (see apps/<category>/*.yaml). Add anything without a container here,
 # following https://gethomepage.dev/configs/services/
+
+# Links to the apps on the Cloudflare Tunnel, for use away from home.
+- Remote:
+    - Plex:
+        icon: sh-plex.webp
+        href: https://app.plex.tv
+    - Seerr:
+        icon: sh-seerr.webp
+        href: https://seerr.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}
+    - Tracearr:
+        icon: mdi-chart-timeline-variant
+        href: https://tracearr.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}
+    - Sonarr:
+        icon: sh-sonarr.webp
+        href: https://sonarr.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}
+    - Radarr:
+        icon: sh-radarr.webp
+        href: https://radarr.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}
+    - Prowlarr:
+        icon: sh-prowlarr.webp
+        href: https://prowlarr.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}
+    - Bazarr:
+        icon: sh-bazarr.webp
+        href: https://bazarr.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}
+    - SABnzbd:
+        icon: sh-sabnzbd.webp
+        href: https://sabnzbd.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}
+    - qBittorrent:
+        icon: sh-qbittorrent.webp
+        href: https://qbittorrent.{{HOMEPAGE_VAR_TUNNEL_DOMAIN}}

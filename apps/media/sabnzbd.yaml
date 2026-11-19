@@ -30,6 +30,9 @@ services:
       traefik.enable: true
       traefik.http.services.sabnzbd.loadbalancer.server.port: 8080
       traefik.http.routers.sabnzbd.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+      traefik.http.routers.sabnzbd-tunnel.rule: Host(`sabnzbd.${TUNNEL_DOMAIN}`)
+      traefik.http.routers.sabnzbd-tunnel.entrypoints: tunnel
+      traefik.http.routers.sabnzbd-tunnel.service: sabnzbd
       tinyauth.apps.sabnzbd.config.domain: sabnzbd.${DOMAIN_NAME}
       tinyauth.apps.sabnzbd.path.allow: ^/(sabnzbd/)?api
       homepage.group: Media Management

@@ -32,6 +32,7 @@ services:
       - traefik
     labels:
       traefik.enable: true
+      traefik.http.routers.seerr.entrypoints: websecure,tunnel
       traefik.http.services.seerr.loadbalancer.server.port: 5055
       homepage.group: Media Management
       homepage.name: Seerr

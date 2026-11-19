@@ -35,6 +35,9 @@ services:
       traefik.enable: true
       traefik.http.services.sonarr.loadbalancer.server.port: 8989
       traefik.http.routers.sonarr.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+      traefik.http.routers.sonarr-tunnel.rule: Host(`sonarr.${TUNNEL_DOMAIN}`)
+      traefik.http.routers.sonarr-tunnel.entrypoints: tunnel
+      traefik.http.routers.sonarr-tunnel.service: sonarr
       tinyauth.apps.sonarr.config.domain: sonarr.${DOMAIN_NAME}
       tinyauth.apps.sonarr.path.allow: ^/(api|feed|ping)
       homepage.group: Media Management

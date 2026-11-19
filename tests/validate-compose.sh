@@ -9,13 +9,14 @@ export PUID="1000"
 export PGID="1000"
 export PHYSICAL_SERVER_IP="127.0.0.1"
 export PHYSICAL_SERVER_NETWORK="127.0.0.0/8"
-export PUBLIC_DOMAIN="test.tld"
+export TUNNEL_DOMAIN="test.tld"
 export CF_ZONE_ID="test"
 export MEDIA_DIR="/tmp/media"
 export BACKUP_DIR="/tmp/backups"
 export CF_DNS_API_TOKEN="test"
 export CF_API_EMAIL="test@test.tld"
 export TAILSCALE_TOKEN="test"
+export CLOUDFLARE_TUNNEL_TOKEN="test"
 export POCKET_ID_ENCRYPTION_KEY="test"
 export HOMARR_SECRET_ENCRYPTION_KEY="test"
 export TRACEARR_JWT_SECRET="test"
@@ -94,5 +95,8 @@ check absent  configarr flaresolverr
 check present tools    upsnap
 check present full     upsnap
 check absent  default  upsnap
+check present full     cloudflared
+check absent  default  cloudflared
+check absent  network  cloudflared
 
 echo "OK"

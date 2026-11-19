@@ -41,8 +41,8 @@ Without Traefik you need the overlay, or there is no way in. With Traefik it is 
 Containers talk to each other over the Docker networks either way, so routing, the Homepage widgets
 and Configarr work in both setups.
 
-Some ports cannot go through Traefik, so they are always published: Traefik's own `80`, `443` and
-`8443` (`TRAEFIK_PUBLIC_PORT`), Pi-hole's DNS on `53`, Plex's `32400` and its discovery ports, and
+Some ports cannot go through Traefik, so they are always published: Traefik's own `80` and `443`,
+Pi-hole's DNS on `53`, Plex's `32400` and its discovery ports, and
 gluetun's `TORRENT_PORT`.
 
 #### Memory limits
@@ -54,7 +54,7 @@ limit with `<SERVICE>_MEMORY_LIMIT` in `.env`, the service name in upper case wi
 | Limit | Services                                                       |
 |-------|----------------------------------------------------------------|
 | 64M   | ddns-updater                                                   |
-| 128M  | pocket-id, tinyauth, gangplank                                 |
+| 128M  | pocket-id, tinyauth, gangplank, cloudflared                    |
 | 256M  | gluetun, traefik, tailscale, glances, upsnap                   |
 | 512M  | bazarr, prowlarr, configarr, pihole, homepage, tracearr-redis  |
 | 1G    | radarr, sonarr, sabnzbd, seerr, tracearr, homarr, homebridge   |
@@ -80,10 +80,11 @@ Cloudflare points `${DOMAIN_NAME}` and `*.${DOMAIN_NAME}` at the server's LAN IP
 every web UI through Traefik. Away from home, Tailscale's subnet route gets you to the same address.
 Traefik gets its certificates through Cloudflare's DNS challenge.
 
-DDNS Updater keeps a second Cloudflare hostname, `PUBLIC_DOMAIN`, pointed at your public IP. Plex
-remote access and the apps that opt in (Tracearr) use it. With `TINYAUTH_ENABLED` set, Tinyauth adds
-a Pocket ID login in front of the *arr apps and a few tools. qBittorrent shares Gluetun's network,
-so its traffic goes through the VPN. Icons come from [selfh.st/icons](https://selfh.st/icons/).
+DDNS Updater keeps a public hostname, `DDNS_HOSTNAME`, pointed at your public IP for Plex remote
+access. Seerr, Tracearr and the media management apps are also served at `<app>.${TUNNEL_DOMAIN}`
+through a Cloudflare Tunnel, behind a Cloudflare Access login. With `TINYAUTH_ENABLED` set,
+Tinyauth adds a Pocket ID login in front of the *arr apps and a few tools. qBittorrent shares
+Gluetun's network, so its traffic goes through the VPN. Icons come from [selfh.st/icons](https://selfh.st/icons/).
 
 ```mermaid
 ---
@@ -102,6 +103,7 @@ flowchart TB
         tailscale@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/tailscale.png", label: "Tailscale", pos: "b", w: 32, h: 32, constraint: "on" }
         gluetun@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/gluetun.png", label: "Gluetun", pos: "b", w: 32, h: 32, constraint: "on" }
         ddns@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/ddns-updater.png", label: "DDNS Updater", pos: "b", w: 32, h: 32, constraint: "on" }
+        cloudflared@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/cloudflare-zero-trust.png", label: "Cloudflared", pos: "b", w: 32, h: 32, constraint: "on" }
         gangplank@{ img: "https://raw.githubusercontent.com/IonBazan/gangplank/refs/heads/main/logo.svg", label: "Gangplank", pos: "b", w: 32, h: 32, constraint: "on" }
         traefik@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/traefik.png", label: "Traefik", pos: "b", w: 32, h: 32, constraint: "on" }
         pihole@{ img: "https://raw.githubusercontent.com/selfhst/icons/main/png/pi-hole.png", label: "Pi-hole", pos: "b", w: 32, h: 32, constraint: "on" }
@@ -167,11 +169,12 @@ flowchart TB
     you -->|"away from home"| internet
     internet -->|"tailnet"| tailscale
     tailscale -->|"subnet route"| traefik
-    internet -->|"public apps, :8443"| traefik
     internet ---|"VPN tunnel"| gluetun
     internet --- cloudflare
-    cloudflare ---|"PUBLIC_DOMAIN, public IP"| ddns
+    cloudflare ---|"DDNS_HOSTNAME, public IP"| ddns
     cloudflare ---|"ACME DNS challenge"| traefik
+    cloudflare -->|"tunnel, Access login"| cloudflared
+    cloudflared -->|"Access login passed"| traefik
     internet ---|"port forwarding"| gangplank
 
     configarr -->|"configures"| radarr & sonarr & prowlarr & flaresolverr
@@ -219,10 +222,10 @@ There are three kinds of profile:
 | --- | --- | --- |
 | `basic` | Media servers, the *arr apps, Seerr, Tracearr, qBittorrent behind the VPN, Homepage, Glances and DDNS Updater | You reach the apps by host port or over Tailscale, without Traefik |
 | `default` | Everything in `basic`, plus Traefik and Tailscale | The usual setup, and the value `.env.example` ships with |
-| `full` | Every long-running service in the repo, including home automation, FlareSolverr, AI, Pocket ID, Tinyauth, Homarr, UpSnap, Pi-hole and Gangplank | The host is dedicated to this stack and you want all of it |
+| `full` | Every long-running service in the repo, including home automation, FlareSolverr, AI, Pocket ID, Tinyauth, Homarr, UpSnap, Pi-hole, Gangplank and Cloudflared | The host is dedicated to this stack and you want all of it |
 
-The AI stack, Pocket ID, Tinyauth and Homarr are heavy or need extra setup. Home automation and
-FlareSolverr are not needed by everyone. Pi-hole and Gangplank change how the host or router
+The AI stack, Pocket ID, Tinyauth, Homarr and Cloudflared are heavy or need extra setup. Home
+automation and FlareSolverr are not needed by everyone. Pi-hole and Gangplank change how the host or router
 behaves, and UpSnap needs the host network. So only `full` or their own profiles start them.
 Configarr is in no group. It only runs when you call it, see Configarr under Media.
 
@@ -329,17 +332,20 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `COMPOSE_FILE` | host ports | **Optional.** Set to `docker-compose.yaml:docker-compose.ports.yaml` to publish the web UIs on the host, see [Host ports](#host-ports). Unset means Traefik and Tailscale only. |
 | `PHYSICAL_SERVER_IP` | Plex, Tailscale, DNS records | _(auto)_ Host LAN IP: `ip route get 1 \| awk '{print $7}'`. |
 | `PHYSICAL_SERVER_NETWORK` | Tailscale subnet router | _(auto)_ Your LAN CIDR, e.g. `192.168.18.0/24`. |
-| `PUBLIC_DOMAIN` | Plex remote access, public routers | A hostname in your Cloudflare zone, such as `public.example.tld`, that DDNS Updater keeps on your public IP, see [Public internet](#public-internet-optional). |
+| `TUNNEL_DOMAIN` | Cloudflare Tunnel | The apex of your Cloudflare zone, such as `example.tld` when `DOMAIN_NAME` is `homelab.example.tld`, see [Public internet](#public-internet-optional). |
+| `DDNS_HOSTNAME` | Plex remote access, DDNS Updater | **Optional.** The name DDNS Updater keeps on your public IP, such as `plex.example.tld`. Defaults to `TUNNEL_DOMAIN`. |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Cloudflared | Used only with the `cloudflared` profile. Cloudflare Zero Trust → **Networks → Tunnels → Create a tunnel**, the value after `--token`, see [Public internet](#public-internet-optional). |
 | `PLEX_CLAIM` | Plex first run | Fresh token from <https://www.plex.tv/claim> (valid about 4 minutes). Can be blanked after first start. |
 | `TAILSCALE_TOKEN` | Tailscale | Tailscale admin → **Settings → Keys → Generate auth key**. Mark it *Reusable* and *Pre-approved* to skip manual route approval. |
-| `CF_DNS_API_TOKEN` | Traefik HTTPS, DDNS Updater | Cloudflare → **My Profile → API Tokens → Create Token → "Edit zone DNS"**, scoped to your zone (`Zone:DNS:Edit` and `Zone:Zone:Read`). If `PUBLIC_DOMAIN` is in another zone, include both zones. |
-| `CF_ZONE_ID` | DDNS Updater | Cloudflare → your domain → **Overview → Zone ID**, for the zone that holds `PUBLIC_DOMAIN`. It can differ from the `DOMAIN_NAME` zone. |
+| `CF_DNS_API_TOKEN` | Traefik HTTPS, DDNS Updater | Cloudflare → **My Profile → API Tokens → Create Token → "Edit zone DNS"**, scoped to your zone (`Zone:DNS:Edit` and `Zone:Zone:Read`). If `TUNNEL_DOMAIN` is in another zone, include both zones. |
+| `CF_ZONE_ID` | DDNS Updater | Cloudflare → your domain → **Overview → Zone ID**, for the zone that holds `TUNNEL_DOMAIN`. It can differ from the `DOMAIN_NAME` zone. |
 | `CF_API_EMAIL` | Traefik HTTPS | Your Cloudflare account email, used as the Let's Encrypt account email. |
 | `TRAEFIK_DASHBOARD_AUTH` | Traefik dashboard | **Optional**, blank means no auth. `user:hash` from `htpasswd -nbB admin 'pass' \| sed -e 's/\$/\$\$/g'` (every `$` doubled for `.env`). |
 | `HOMARR_SECRET_ENCRYPTION_KEY` | Homarr | _(auto)_ `openssl rand -hex 32` |
 | `TRACEARR_JWT_SECRET` / `TRACEARR_COOKIE_SECRET` | Tracearr | _(auto)_ `openssl rand -hex 32` each |
 | `SONARR_API_KEY` / `RADARR_API_KEY` / `PROWLARR_API_KEY` / `BAZARR_API_KEY` | Configarr | _(auto)_ `openssl rand -hex 16` each. Leave blank to let each app self-generate, in which case Configarr will not run. |
 | `QBITTORRENT_PASSWORD` | qBittorrent WebUI | _(auto)_ Written to the WebUI login on every start and used by the Homepage widget, see qBittorrent below. Leave it blank to set the password in the UI. |
+| `QBITTORRENT_API_KEY` | qBittorrent API | _(auto)_ `qbt_` plus 28 characters. Written to the WebUI API key on every start, for apps that send `Authorization: Bearer <key>` or `X-API-Key`. |
 | `TINYAUTH_OIDC_CLIENT_SECRET` | Tinyauth | _(auto)_ Used only with the `auth` or `tinyauth` profile. `scripts/pocket-id-clients.sh` registers it in Pocket ID. `TINYAUTH_OIDC_CLIENT_ID` is optional and defaults to `tinyauth`. |
 | `POCKET_ID_STATIC_API_KEY` | Pocket ID client setup | _(auto)_ Admin API key `scripts/pocket-id-clients.sh` uses to register clients. |
 | `OPEN_WEBUI_OIDC_CLIENT_SECRET` / `HOMARR_OIDC_CLIENT_SECRET` | Pocket ID sign-in | _(auto)_ Generated only when Pocket ID is in the profiles, see Pocket ID below. |
@@ -485,36 +491,80 @@ anywhere. Approve the route and turn on IP forwarding on the host, see Tailscale
 
 ### Public internet (optional)
 
-Use this only for services that need a real public address, such as Plex remote access. Set
-`PUBLIC_DOMAIN` to a hostname in your Cloudflare zone, such as `public.example.tld`, and `CF_ZONE_ID`
-to that zone's ID. DDNS Updater (profile `network`) then points `PUBLIC_DOMAIN` and
-`*.PUBLIC_DOMAIN` at your public IP, using the same `CF_DNS_API_TOKEN` as Traefik. Its settings are
-built from `.env` in the `CONFIG` variable of [`ddns-updater.yaml`](apps/network/ddns-updater.yaml),
-so no credential ends up in a tracked file. For another DNS provider, change that JSON
+Set `TUNNEL_DOMAIN` to the apex of your Cloudflare zone, such as `example.tld`, and `CF_ZONE_ID` to
+that zone's ID.
+
+Services that need a real public address, such as Plex remote access, use `DDNS_HOSTNAME`. Set it to
+a name such as `plex.example.tld`, so your home IP is not on the bare domain. It defaults to
+`TUNNEL_DOMAIN`. DDNS Updater (profile `network`) points it at your public IP as a DNS-only record,
+using the same `CF_DNS_API_TOKEN` as Traefik. Its settings are built from `.env` in the `CONFIG`
+variable of [`ddns-updater.yaml`](apps/network/ddns-updater.yaml), so no credential ends up in a
+tracked file. For another DNS provider, change that JSON
 ([format](https://github.com/qdm12/ddns-updater#configuration)).
 
 Forward the port on your router (Plex needs `32400/tcp`), or let Gangplank (profile `gangplank`) open
 UPnP forwards for ports marked with a `gangplank.forward` label. Plex advertises both its LAN
-address and `PUBLIC_DOMAIN` through `ADVERTISE_IP`.
+address and `DDNS_HOSTNAME` through `ADVERTISE_IP`.
 
-A web app can also get a public hostname, `<app>.${PUBLIC_DOMAIN}`, served on Traefik's `public`
-entrypoint. Forward WAN `443/tcp` to the host's `TRAEFIK_PUBLIC_PORT` (default `8443`). The wildcard
-record makes every subdomain resolve. Only Tracearr does this today. To expose another app, add two
-labels:
+The media apps are also reachable from the internet at `<app>.${TUNNEL_DOMAIN}`, through a Cloudflare
+Tunnel. Cloudflared (profile `cloudflared`) keeps an outbound connection to Cloudflare and passes
+requests to Traefik's `tunnel` entrypoint, so no web port is open on your router and your home IP
+stays hidden. Cloudflare Access asks for a login before any request reaches the tunnel.
+
+Traefik's default rule matches both `<app>.${DOMAIN_NAME}` and `<app>.${TUNNEL_DOMAIN}`, but only
+routers that list the `tunnel` entrypoint answer from the tunnel. Seerr, Tracearr and qBittorrent
+add it to their router:
 
 ```yaml
-traefik.http.routers.<app>.entrypoints: websecure,public
-homelab.public: true
+traefik.http.routers.<app>.entrypoints: websecure,tunnel
 ```
 
-`homelab.public` makes Traefik's default rule also match `<app>.${PUBLIC_DOMAIN}`, and the
-entrypoints label adds the router to the `public` entrypoint. Apps without these labels stay
-LAN-only. Only expose apps that have their own login.
+An app with its own `rule` also adds the tunnel host to it, as qBittorrent does. Everything else
+stays LAN-only.
 
-Public hostnames use a separate wildcard certificate for `${PUBLIC_DOMAIN}` and `*.${PUBLIC_DOMAIN}`,
-from the same DNS challenge. A small `public-cert` router on the Traefik container requests it, so a
-failed public renewal cannot affect the main certificate. That router answers the bare
-`${PUBLIC_DOMAIN}` with `418`. Public subdomains with no app behind them return `404`.
+Tinyauth cannot work over the tunnel, because it sends the browser to `tinyauth.${DOMAIN_NAME}`,
+which only resolves to the LAN. So an app behind Tinyauth (Sonarr, Radarr, Prowlarr, Bazarr, SABnzbd
+and Homepage) keeps its main router on the LAN and adds a second router for the tunnel, without the
+middleware, where Access is the login:
+
+```yaml
+traefik.http.routers.<app>.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+traefik.http.routers.<app>-tunnel.rule: Host(`<app>.${TUNNEL_DOMAIN}`)
+traefik.http.routers.<app>-tunnel.entrypoints: tunnel
+traefik.http.routers.<app>-tunnel.service: <app>
+```
+
+With `TINYAUTH_ENABLED` set, Sonarr, Radarr and Prowlarr turn off their own login, so over the
+tunnel Access is their only login.
+
+Set up the tunnel once in Cloudflare Zero Trust:
+
+1. **Networks → Tunnels → Create a tunnel → Cloudflared.** Copy the token from the Docker command
+   into `CLOUDFLARE_TUNNEL_TOKEN` and add `cloudflared` to `COMPOSE_PROFILES`.
+2. **Add a public hostname:** subdomain `*`, domain `TUNNEL_DOMAIN`, service
+   `https://traefik:8443`. Under **Additional application settings → TLS**, turn on **Match SNI to
+   Host**, so Traefik serves the `${TUNNEL_DOMAIN}` certificate and Cloudflared can verify it.
+3. Delete the old `*.TUNNEL_DOMAIN` `A` record. If Cloudflare does not create the wildcard record
+   for you, add a proxied `CNAME` from `*.TUNNEL_DOMAIN` to `<tunnel id>.cfargotunnel.com`.
+4. **Access → Applications → Add → Self-hosted** for `*.TUNNEL_DOMAIN`, with an *Allow* policy that
+   lists your family's email addresses and **One-time PIN** as the login method. Visitors get a code
+   by email before Cloudflare lets them through, and everyone else is stopped at Cloudflare's edge.
+   The free plan covers 50 users.
+
+Use the zone apex because Cloudflare's free certificate only covers one level below it
+(`*.example.tld`). A deeper name such as `tracearr.tunnel.example.tld` fails with a certificate
+error unless you pay for Advanced Certificate Manager. The LAN records under `*.${DOMAIN_NAME}` are
+more specific, so the tunnel's wildcard does not affect them.
+
+Access shows a login page, so an app's mobile app or API clients cannot get past it. Add a *Bypass*
+policy for those paths. Cloudflare's terms do not allow serving
+mostly video through its network, so Plex and Jellyfin stay off the tunnel, on their own forwarded
+ports.
+
+Tunnel hostnames use a separate wildcard certificate for `${TUNNEL_DOMAIN}` and `*.${TUNNEL_DOMAIN}`,
+from the same DNS challenge. A small `tunnel-cert` router on the Traefik container requests it, so a
+failed tunnel renewal cannot affect the main certificate. That router answers the bare
+`${TUNNEL_DOMAIN}` with `418`. Public subdomains with no app behind them return `404`.
 
 Everything else stays private to the LAN and the tailnet.
 
@@ -767,8 +817,7 @@ Redis containers on a private `tracearr` network.
 - **Profiles:** `tracearr`, `media`, `basic`, `default`, `full`
 
 Needs `TRACEARR_JWT_SECRET` and `TRACEARR_COOKIE_SECRET` in `.env`, which `scripts/setup-env.sh`
-generates. It is also public at `tracearr.${PUBLIC_DOMAIN}`, see
-[Public internet](#public-internet-optional).
+generates.
 
 #### [Seerr](https://github.com/seerr-team/seerr) ([definition](apps/media/seerr.yaml))
 Request manager for Plex and Jellyfin. Users ask for a film or show, and approved requests go to
@@ -824,13 +873,20 @@ docker compose run --rm configarr
 
 ### Network
 
+#### [Cloudflared](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/) ([definition](apps/network/cloudflared.yaml))
+Cloudflare Tunnel connector that serves the media apps on the internet without an open port.
+- **Ports:** none
+- **Profiles:** `cloudflared`, `full`
+
+Needs `CLOUDFLARE_TUNNEL_TOKEN` in `.env`, see [Public internet](#public-internet-optional).
+
 #### [DDNS Updater](https://github.com/qdm12/ddns-updater) ([definition](apps/network/ddns-updater.yaml))
 Keeps your DNS records pointed at your current public IP.
 - **Ports:** 8001:8000/tcp (DDNS_UPDATER_PORT), overlay only, see [Host ports](#host-ports)
 - **Profiles:** `ddns-updater`, `network`, `basic`, `default`, `full`
 
-Updates `PUBLIC_DOMAIN` and `*.PUBLIC_DOMAIN` on Cloudflare. Needs `CF_DNS_API_TOKEN`, `CF_ZONE_ID`
-and `PUBLIC_DOMAIN` in `.env`, see [Public internet](#public-internet-optional).
+Updates `DDNS_HOSTNAME` on Cloudflare. Needs `CF_DNS_API_TOKEN`, `CF_ZONE_ID` and `TUNNEL_DOMAIN`
+in `.env`, see [Public internet](#public-internet-optional).
 
 #### [Gangplank](https://github.com/IonBazan/gangplank) ([definition](apps/network/gangplank.yaml))
 Opens UPnP port forwards on your router for the container ports you label.
@@ -884,7 +940,7 @@ sudo sysctl -p /etc/sysctl.d/99-tailscale.conf
 
 #### [Traefik](https://traefik.io/traefik/) ([definition](apps/network/traefik.yaml))
 Reverse proxy in front of every web UI in the stack.
-- **Ports:** 80:80/tcp, 443:443/tcp, 8443:8443/tcp (TRAEFIK_PUBLIC_PORT)
+- **Ports:** 80:80/tcp, 443:443/tcp
 - **Profiles:** `traefik`, `auth`, `default`, `full`
 
 It routes every container with `traefik.enable: true` at `<container>.${DOMAIN_NAME}` (see
@@ -914,13 +970,13 @@ API, so the Homepage widget can read `http://traefik` over the Docker network. A
 (`127.0.0.1/32` and `DOCKER_NETWORK_CIDR`) blocks LAN clients that fake the `Host` header, so the API
 needs no login and stays private.
 
-The third entrypoint, `public` on port 8443, takes traffic from the internet. Only routers that list
-`public` in their entrypoints listen on it, so a WAN forward to it cannot reach a LAN-only app, even
-with a fake `Host` header. It serves a separate wildcard certificate for `${PUBLIC_DOMAIN}`, see
+The third entrypoint, `tunnel` on port 8443, takes traffic from the internet through Cloudflared and
+is not published on the host. Only routers that list `tunnel` in their entrypoints listen on it, so
+the tunnel cannot reach a LAN-only app, even with a fake `Host` header. It serves a separate wildcard certificate for `${TUNNEL_DOMAIN}`, see
 [Public internet](#public-internet-optional).
 
 The `middlewares-secure-headers` middleware (nosniff, frame options, referrer and permissions policy)
-applies to every route on the `websecure` and `public` entrypoints. Change it in
+applies to every route on the `websecure` and `tunnel` entrypoints. Change it in
 [`middlewares.yml`](apps/config/traefik/rules/middlewares.yml).
 
 ### Tools
@@ -930,7 +986,13 @@ Start page that lists every service, with live stats and info widgets at the top
 weather, clock, web search).
 - **Ports:** 3002:3000/tcp (HOMEPAGE_PORT), overlay only, see [Host ports](#host-ports)
 - **Profiles:** `homepage`, `tools`, `basic`, `default`, `full`
-- Reachable at `https://home.${DOMAIN_NAME}` and at the bare apex `https://${DOMAIN_NAME}`.
+- Reachable at `https://home.${DOMAIN_NAME}` and at the bare apex `https://${DOMAIN_NAME}`, and
+  through the tunnel at `https://home.${TUNNEL_DOMAIN}`.
+
+The service tiles link to `<app>.${DOMAIN_NAME}`, which only resolves at home or over Tailscale. The
+*Remote* group at the top, from [`services.yaml`](apps/config/homepage/services.yaml), links to
+Seerr, Tracearr and the media management apps at `<app>.${TUNNEL_DOMAIN}`, plus Plex at
+`app.plex.tv`, for use away from home.
 
 The page builds itself from the `homepage.*` labels on each container, so a new service shows up on
 its own. Info widgets and layout are in [`apps/config/homepage/`](apps/config/homepage/). Set

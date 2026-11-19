@@ -37,7 +37,8 @@ services:
         max-file: "3"
     labels:
       traefik.enable: true
-      traefik.http.routers.qbittorrent.rule: Host(`qbittorrent.${DOMAIN_NAME}`)
+      traefik.http.routers.qbittorrent.rule: Host(`qbittorrent.${DOMAIN_NAME}`) || Host(`qbittorrent.${TUNNEL_DOMAIN}`)
+      traefik.http.routers.qbittorrent.entrypoints: websecure,tunnel
       traefik.http.routers.qbittorrent.service: qbittorrent
       traefik.http.services.qbittorrent.loadbalancer.server.port: 8081
       traefik.http.services.qbittorrent.loadbalancer.passhostheader: false

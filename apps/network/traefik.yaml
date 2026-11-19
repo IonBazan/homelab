@@ -17,15 +17,11 @@ services:
         target: 443
         protocol: tcp
         mode: host
-      - published: ${TRAEFIK_PUBLIC_PORT:-8443}
-        target: 8443
-        protocol: tcp
-        mode: host
     environment:
       CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
       TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${CF_API_EMAIL}
       DOMAIN_NAME: ${DOMAIN_NAME:?set DOMAIN_NAME in .env, e.g. homelab.example.tld (see .env.example)}
-      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}
+      TUNNEL_DOMAIN: ${TUNNEL_DOMAIN:?set TUNNEL_DOMAIN in .env}
       TZ: ${TZ}
     volumes:
       - ../config/traefik/rules:/etc/traefik/dynamic:ro
@@ -46,7 +42,7 @@ services:
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
       - --entrypoints.websecure.http.middlewares=middlewares-secure-headers@file
-      - --entrypoints.public.http.middlewares=middlewares-secure-headers@file
+      - --entrypoints.tunnel.http.middlewares=middlewares-secure-headers@file
       - --certificatesresolvers.letsencrypt.acme.caserver=${LETS_ENCRYPT_ENV:-https://acme-v02.api.letsencrypt.org/directory}
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -91,14 +87,14 @@ services:
       traefik.http.routers.catch-all.middlewares: catch-all-redirect
       traefik.http.middlewares.catch-all-redirect.redirectregex.regex: .*
       traefik.http.middlewares.catch-all-redirect.redirectregex.replacement: ${TRAEFIK_CATCHALL_URL:-about:blank}
-      # separate wildcard cert for ${PUBLIC_DOMAIN}, so a failed public renewal never
-      # touches the default cert. Traefik serves it by SNI to every public router.
-      traefik.http.routers.public-cert.rule: Host(`${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}`)
-      traefik.http.routers.public-cert.entrypoints: public
-      traefik.http.routers.public-cert.service: noop@internal
-      traefik.http.routers.public-cert.tls.certresolver: letsencrypt
-      traefik.http.routers.public-cert.tls.domains[0].main: ${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}
-      traefik.http.routers.public-cert.tls.domains[0].sans: "*.${PUBLIC_DOMAIN:?set PUBLIC_DOMAIN in .env}"
+      # separate wildcard cert for ${TUNNEL_DOMAIN}, so a failed tunnel renewal never
+      # touches the default cert. Traefik serves it by SNI to every tunnel router.
+      traefik.http.routers.tunnel-cert.rule: Host(`${TUNNEL_DOMAIN:?set TUNNEL_DOMAIN in .env}`)
+      traefik.http.routers.tunnel-cert.entrypoints: tunnel
+      traefik.http.routers.tunnel-cert.service: noop@internal
+      traefik.http.routers.tunnel-cert.tls.certresolver: letsencrypt
+      traefik.http.routers.tunnel-cert.tls.domains[0].main: ${TUNNEL_DOMAIN:?set TUNNEL_DOMAIN in .env}
+      traefik.http.routers.tunnel-cert.tls.domains[0].sans: "*.${TUNNEL_DOMAIN:?set TUNNEL_DOMAIN in .env}"
       homepage.group: Network
       homepage.name: Traefik
       homepage.icon: sh-traefik.webp

@@ -9,7 +9,8 @@ services:
         limits:
           memory: ${HOMEPAGE_MEMORY_LIMIT:-512M}
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: home.${DOMAIN_NAME},${DOMAIN_NAME},${PHYSICAL_SERVER_IP}:${HOMEPAGE_PORT:-3002}
+      HOMEPAGE_ALLOWED_HOSTS: home.${DOMAIN_NAME},${DOMAIN_NAME},home.${TUNNEL_DOMAIN},${PHYSICAL_SERVER_IP}:${HOMEPAGE_PORT:-3002}
+      HOMEPAGE_VAR_TUNNEL_DOMAIN: ${TUNNEL_DOMAIN}
       HOMEPAGE_VAR_WEATHER_LATITUDE: ${WEATHER_LATITUDE:-1.3521}
       HOMEPAGE_VAR_WEATHER_LONGITUDE: ${WEATHER_LONGITUDE:-103.8198}
     volumes:
@@ -28,3 +29,6 @@ services:
       traefik.http.routers.homepage.rule: Host(`home.${DOMAIN_NAME}`) || Host(`${DOMAIN_NAME}`)
       traefik.http.services.homepage.loadbalancer.server.port: 3000
       traefik.http.routers.homepage.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+      traefik.http.routers.homepage-tunnel.rule: Host(`home.${TUNNEL_DOMAIN}`)
+      traefik.http.routers.homepage-tunnel.entrypoints: tunnel
+      traefik.http.routers.homepage-tunnel.service: homepage

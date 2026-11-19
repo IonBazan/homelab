@@ -30,6 +30,9 @@ services:
       traefik.enable: true
       traefik.http.services.prowlarr.loadbalancer.server.port: 9696
       traefik.http.routers.prowlarr.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}
+      traefik.http.routers.prowlarr-tunnel.rule: Host(`prowlarr.${TUNNEL_DOMAIN}`)
+      traefik.http.routers.prowlarr-tunnel.entrypoints: tunnel
+      traefik.http.routers.prowlarr-tunnel.service: prowlarr
       tinyauth.apps.prowlarr.config.domain: prowlarr.${DOMAIN_NAME}
       tinyauth.apps.prowlarr.path.allow: ^/(api|ping|\d+/(api|download))
       homepage.group: Media Management

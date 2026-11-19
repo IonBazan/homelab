@@ -5,6 +5,9 @@ hideVersion: true
 
 # Group order + layout. Group names must match the `homepage.group` container labels.
 layout:
+  Remote:
+    style: row
+    columns: 5
   Media:
     style: row
     columns: 2

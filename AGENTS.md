@@ -109,9 +109,13 @@ it. `docker compose run --rm <app>` still works, because naming a service enable
   `${DOMAIN_NAME}`, so a plain `traefik.http.services.<app>.loadbalancer.server.port` is usually
   all the extra configuration needed.
 - `gangplank.forward: "<port>/<proto>"` marks ports that should be forwarded on the router.
-- `homelab.public: true` plus `traefik.http.routers.<app>.entrypoints: websecure,public` also
-  serves the app at `<app>.${PUBLIC_DOMAIN}` from the internet. Only add it to an app with its own
-  login, and only when asked.
+- `traefik.http.routers.<app>.entrypoints: websecure,tunnel` also serves the app at
+  `<app>.${TUNNEL_DOMAIN}` from the internet, behind Cloudflare Access; the default rule already
+  matches that host, and an app with its own `rule` adds ``|| Host(`<sub>.${TUNNEL_DOMAIN}`)``. Only
+  Seerr, Tracearr, the media management apps and Homepage are on the tunnel (never the video
+  servers), and only when asked. An app behind Tinyauth adds an
+  `<app>-tunnel` router on `tunnel` without the middleware instead, since Tinyauth only works on the
+  LAN. Add the app to the *Remote* group in `apps/config/homepage/services.yaml` too.
 - An app with no login of its own gets
   `traefik.http.routers.<app>.middlewares: ${TINYAUTH_ENABLED:+tinyauth@docker}`, so Tinyauth
   protects it whenever `TINYAUTH_ENABLED` is set.

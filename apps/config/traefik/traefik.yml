@@ -13,9 +13,9 @@ entryPoints:
     http:
       tls: {}
     asDefault: true
-  # Only routers that opt in with `entrypoints: public` listen here. Forward WAN 443 to this
-  # port rather than to :443, so a spoofed Host header cannot reach a LAN-only router.
-  public:
+  # Cloudflared sends the tunnel here. Only routers that list `tunnel` in their entrypoints listen
+  # here, so a spoofed Host header cannot reach a LAN-only router.
+  tunnel:
     address: ":8443"
     http:
       tls: {}
@@ -25,9 +25,7 @@ api:
 
 providers:
   docker:
-    # `homelab.public: true` also matches <name>.${PUBLIC_DOMAIN}; the app must add the `public`
-    # entrypoint to its router for that host to be reachable from outside.
-    defaultRule: "Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `DOMAIN_NAME` }}`){{ if eq (index .Labels `homelab.public`) `true` }} || Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `PUBLIC_DOMAIN` }}`){{ end }}"
+    defaultRule: "Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `DOMAIN_NAME` }}`) || Host(`{{ trimSuffix `-homelab` .Name }}.{{ env `TUNNEL_DOMAIN` }}`)"
     exposedByDefault: false
     network: "traefik"
   file:
