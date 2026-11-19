@@ -2,9 +2,9 @@
 # Runs as root from /custom-cont-init.d on every start, after the image has seeded
 # qBittorrent.conf and before qBittorrent launches. Writes WebUI\Username and
 # WebUI\Password_PBKDF2 (PBKDF2-HMAC-SHA512, 100k iterations, qBittorrent's own
-# format) from QBITTORRENT_USERNAME / QBITTORRENT_PASSWORD, and
-# WebUI\TrustedReverseProxiesList from TRUSTED_PROXIES. A matching login is
-# left untouched; an empty password leaves the login to qBittorrent.
+# format) from QBITTORRENT_USERNAME / QBITTORRENT_PASSWORD, WebUI\APIKey from
+# QBITTORRENT_API_KEY and WebUI\TrustedReverseProxiesList from TRUSTED_PROXIES.
+# A matching login is left untouched; an empty password leaves the login to qBittorrent.
 exec python3 - <<'EOF'
 import base64
 import hashlib
@@ -65,6 +65,20 @@ if proxies and cur_proxies != proxies:
     set_pref(lines, r"WebUI\TrustedReverseProxiesList", proxies)
     changed = True
     print(f"[webui-login] trusted reverse proxies set to {proxies}")
+
+api_key = os.environ.get("QBITTORRENT_API_KEY", "")
+_, cur_key = read_pref(lines, r"WebUI\APIKey")
+if api_key and cur_key != api_key:
+    set_pref(lines, r"WebUI\APIKey", api_key)
+    changed = True
+    print("[webui-login] WebUI API key set from QBITTORRENT_API_KEY")
+
+# A subnet whitelist set in the UI would let anything behind Traefik skip the login.
+_, cur_whitelist = read_pref(lines, r"WebUI\AuthSubnetWhitelistEnabled")
+if password and cur_whitelist != "false":
+    set_pref(lines, r"WebUI\AuthSubnetWhitelistEnabled", "false")
+    changed = True
+    print("[webui-login] turned off the WebUI auth subnet whitelist")
 
 _, cur_user = read_pref(lines, r"WebUI\Username")
 _, cur_pass = read_pref(lines, r"WebUI\Password_PBKDF2")

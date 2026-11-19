@@ -345,6 +345,7 @@ Work top to bottom. Anything left commented is optional and shown at its default
 | `OPEN_WEBUI_OIDC_CLIENT_SECRET` / `HOMARR_OIDC_CLIENT_SECRET` | Pocket ID sign-in | _(auto)_ Generated only when Pocket ID is in the profiles, see Pocket ID below. |
 | `DOCKER_NETWORK_CIDR` | Traefik API, qBittorrent, Pocket ID, Tinyauth, Open WebUI, Tracearr, Homarr, Sonarr, Radarr, Prowlarr | **Optional.** Subnet of the `traefik` network, trusted as a proxy. Defaults to `172.21.0.0/16`; change it if that range clashes with another network on the host. |
 | `PIHOLE_PASSWORD` | Pi-hole admin | _(auto)_ Used only with the `pihole` profile. |
+| `QBITTORRENT_API_KEY` | qBittorrent API | _(auto)_ `qbt_` plus 28 characters. Written to the WebUI API key on every start, for apps that send `Authorization: Bearer <key>` or `X-API-Key`. |
 | `RENDER_GID` | Plex HW transcode | _(auto)_ `getent group render \| cut -d: -f3` on the host. |
 | `WEATHER_LATITUDE` / `WEATHER_LONGITUDE` | Homepage weather | **Optional.** Your location for the weather widget. |
 
@@ -634,7 +635,8 @@ The rules are `tinyauth.apps.*` labels on each app.
 `COMPOSE_PROFILES` includes `auth`, `tinyauth` or `full`. The Traefik routers of Sonarr, Radarr,
 Prowlarr, Bazarr, SABnzbd, Homepage, Glances, DDNS Updater and the Traefik dashboard then use the `tinyauth`
 middleware. Sonarr, Radarr and Prowlarr switch to the `External` login method, so you only sign in
-once. Bazarr has no such method and keeps its own login. qBittorrent is not behind Tinyauth.
+once. Bazarr has no such method and keeps its own login. qBittorrent is not behind Tinyauth and relies
+on its own login, or `QBITTORRENT_API_KEY` for other apps.
 
 Keep in mind:
 
@@ -716,9 +718,10 @@ for a reverse proxy.
 On every start, [`webui-login.sh`](apps/config/qbittorrent/webui-login.sh) runs before qBittorrent
 launches. It sets `WebUI\TrustedReverseProxiesList` to `DOCKER_NETWORK_CIDR`, so qBittorrent sees the
 real client addresses behind Traefik. If `QBITTORRENT_PASSWORD` is set, it also writes the WebUI
-username and password hash in qBittorrent's own format. It only touches the file when a value
-changes, so the login survives restarts and recreates. The Homepage widget uses the same username
-and password.
+username and password hash in qBittorrent's own format, and turns off the WebUI's auth subnet
+whitelist, so every request behind Traefik has to log in. With `QBITTORRENT_API_KEY` set, it writes
+the API key too. It only touches the file when a value changes, so the login survives restarts and
+recreates. The Homepage widget uses the same username and password.
 
 With `QBITTORRENT_PASSWORD` set, change the password **in `.env`, not in the UI**, because the next
 start reverts changes made in the UI. Configarr then also adds qBittorrent to Sonarr and Radarr for

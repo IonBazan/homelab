@@ -30,6 +30,7 @@ GLUETUN_FILE=".env.gluetun"
 
 rand_hex()  { openssl rand -hex "$1"; }
 rand_pass() { openssl rand -base64 24 | tr -d '/+=\n'; }
+rand_qbt_key() { echo "qbt_$(rand_hex 14)"; }
 
 # raw_value KEY FILE -> value of the first uncommented KEY= line, with a trailing
 # " # comment" and any surrounding quotes stripped
@@ -237,6 +238,7 @@ GEN=(
   "BAZARR_API_KEY                rand_hex 16"
   "SABNZBD_API_KEY               rand_hex 16"
   "QBITTORRENT_PASSWORD          rand_pass"
+  "QBITTORRENT_API_KEY           rand_qbt_key"
   "PIHOLE_PASSWORD               rand_pass"
   "TRACEARR_DB_PASSWORD          rand_pass"
 )
