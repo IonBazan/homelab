@@ -15,6 +15,7 @@ services:
       PROWLARR__AUTH__APIKEY: ${PROWLARR_API_KEY:-}
       PROWLARR__AUTH__METHOD: ${TINYAUTH_ENABLED:+External}
       PROWLARR__SERVER__TRUSTEDNETWORKS: ${DOCKER_NETWORK_CIDR:-172.21.0.0/16}
+      PROWLARR__SERVER__ALLOWEDHOSTS: prowlarr,prowlarr.${DOMAIN_NAME},prowlarr.${TUNNEL_DOMAIN},${PHYSICAL_SERVER_IP}
     volumes:
       - prowlarr_data:/config
       - ${BACKUP_DIR:?set BACKUP_DIR in .env}/prowlarr:/config/Backups

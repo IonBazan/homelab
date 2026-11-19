@@ -12,7 +12,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ}
-      HOST_WHITELIST: sabnzbd, sabnzbd.${DOMAIN_NAME}
+      HOST_WHITELIST: sabnzbd, sabnzbd.${DOMAIN_NAME}, sabnzbd.${TUNNEL_DOMAIN}
       SABNZBD_API_KEY: ${SABNZBD_API_KEY:-}
     volumes:
       - sabnzbd_data:/config
